@@ -724,7 +724,7 @@ function updateDashboard(data) {
   // Kalibrasyon etkenlerini güncelle
   updateCalibFactors(data);
   // Gerçek calib verisi varsa override et
-  if (data.calib) updateCalibFromBot(data.calib, data.active_threshold);
+  if (data.calib) updateCalibFromBot(data.calib, data.active_threshold, data);
 
   // Alt durum barı
   document.getElementById('bar-time').textContent   = (data.last_update || '').slice(11,19) + ' UTC';
@@ -860,9 +860,10 @@ function updateCalibFactors(data) {
 }
 
 
-function updateCalibFromBot(c, thresh) {
-  // Volatilite
-  const vol = c.avg_volatility || 0;
+function updateCalibFromBot(c, thresh, data) {
+  data = data || {};
+  // Volatilite — önce btc_move_1h, yoksa calib verisi
+  const vol = data.btc_move_1h || c.avg_volatility || 0;
   const volPct = Math.min(vol / 3 * 100, 100);
   const volCls = vol > 2 ? 'up' : vol < 0.5 ? 'down' : 'mid';
   setCalibFactor('vol', volPct, volCls, vol.toFixed(3) + '%');
