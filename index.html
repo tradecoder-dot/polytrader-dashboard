@@ -444,7 +444,7 @@ canvas#chart {
       <span id="thresh-max">60 (muhafazakâr)</span>
     </div>
     <div style="margin-top:8px;font-size:9px;color:var(--dim)">
-      Her 20s'de akıllı kalibrasyon çalışır
+      Her 30 taramada (~10dk) otomatik ayarlanır
     </div>
   </div>
 
@@ -502,7 +502,7 @@ canvas#chart {
       <span class="thresh-change-val" id="thresh-change-txt">—</span>
     </div>
     <div class="thresh-change">
-      <span style="color:var(--dim)">HEDEF EŞİK:</span>
+      <span style="color:var(--dim)">SONRAKİ KALİBRASYON:</span>
       <span class="thresh-change-val" id="thresh-target-txt">—</span>
     </div>
   </div>
@@ -548,10 +548,12 @@ let lastPrice = 0;
 
 function initChart(basePrice) {
   chartData = [];
-  let p = basePrice * 0.985;
-  for (let i = 0; i < 120; i++) {
-    p += (Math.random() - 0.48) * basePrice * 0.001;
-    p  = Math.max(basePrice * 0.97, Math.min(basePrice * 1.03, p));
+  // Gerçekçi başlangıç geçmişi — hafif trend aşağı (şu an düşüş trendi)
+  let p = basePrice * 1.008;
+  for (let i = 0; i < 180; i++) {
+    const trend = -0.00003;  // hafif aşağı eğilim
+    p += trend * p + (Math.random() - 0.5) * basePrice * 0.0006;
+    p  = Math.max(basePrice * 0.97, Math.min(basePrice * 1.02, p));
     chartData.push(p);
   }
   chartData[chartData.length - 1] = basePrice;
@@ -629,7 +631,8 @@ function drawChart() {
 function tickChart(newPrice) {
   if (chartData.length === 0) { initChart(newPrice); return; }
   chartData.shift();
-  chartData.push(newPrice);
+  // Gerçek fiyat + çok küçük gürültü (canlı his için)
+  chartData.push(newPrice + (Math.random() - 0.5) * newPrice * 0.0001);
   drawChart();
 }
 
@@ -862,34 +865,48 @@ function updateCalibFactors(data) {
 
 function updateCalibFromBot(c, thresh, data) {
   data = data || {};
-  // Volatilite — önce btc_move_1h, yoksa calib verisi
-  const vol = data.btc_move_1h || c.avg_volatility || 0;
-  const volPct = Math.min(vol / 3 * 100, 100);
-  const volCls = vol > 2 ? 'up' : vol < 0.5 ? 'down' : 'mid';
-  setCalibFactor('vol', volPct, volCls, vol.toFixed(3) + '%');
 
-  // Fırsat kalitesi
+  // 1. VOLATİLİTE — 0-2% ölçeği, düşük=iyi(yeşil), yüksek=kötü(kırmızı)
+  const vol = data.btc_move_1h || c.avg_volatility || 0;
+  const volPct = Math.min(vol / 2 * 100, 100);
+  const volCls = vol > 1.5 ? 'up' : vol < 0.3 ? 'mid' : 'down';
+  const volTxt = vol < 0.01 ? 'Veri toplanıyor' : vol.toFixed(3) + '%';
+  setCalibFactor('vol', Math.max(volPct, 3), volCls, volTxt);
+
+  // 2. FIRSAT KALİTESİ — 0-100 ölçeği, yüksek=iyi(yeşil), düşük=kötü(kırmızı)
   const score = c.avg_score || 50;
   const qualPct = Math.min(score, 100);
-  const qualCls = score > 60 ? 'down' : score < 35 ? 'up' : 'mid';
-  setCalibFactor('qual', qualPct, qualCls, score.toFixed(0) + '/100');
+  const qualCls = score > 55 ? 'down' : score < 40 ? 'up' : 'mid';
+  const qualTxt = score === 50 && !c.avg_score ? 'Veri yok' : score.toFixed(0) + '/100';
+  setCalibFactor('qual', qualPct, qualCls, qualTxt);
 
-  // Spread
+  // 3. SPREAD — 0-5% ölçeği, düşük=iyi(yeşil), yüksek=kötü(kırmızı)
   const spread = c.avg_spread || 0;
   const spreadPct = Math.min(spread / 5 * 100, 100);
   const spreadCls = spread > 3 ? 'up' : spread < 1 ? 'down' : 'mid';
-  setCalibFactor('spread', spreadPct, spreadCls, spread.toFixed(2) + '%');
+  const spreadTxt = spread < 0.001 ? 'Fırsat yok' : spread.toFixed(2) + '%';
+  setCalibFactor('spread', Math.max(spreadPct, 3), spreadCls, spreadTxt);
 
-  // Acil piyasa
+  // 4. ACİL PİYASA — 0=nötr(sarı), >0=iyi(yeşil)
   const urgent = c.avg_urgent || 0;
-  const urgPct = Math.min(urgent / 5 * 100, 100);
-  const urgCls = urgent > 3 ? 'down' : urgent === 0 ? 'up' : 'mid';
-  setCalibFactor('urgent', urgPct, urgCls, urgent.toFixed(1) + ' adet');
+  const urgPct = Math.min(urgent / 3 * 100, 100);
+  const urgCls = urgent > 1 ? 'down' : 'mid';   // acil piyasa var=iyi=yeşil
+  const urgTxt = urgent === 0 ? 'Yok' : urgent.toFixed(1) + ' adet';
+  setCalibFactor('urgent', Math.max(urgPct, 3), urgCls, urgTxt);
 
-  // Örneklem sayısı
-  const samples = c.vol_samples || 0;
-  document.getElementById('thresh-target-txt').textContent =
-    samples + ' ölçüm ile hesaplandı';
+  // Sonraki kalibrasyon bilgisi
+  const samples  = c.vol_samples || 0;
+  const nextCalib = 30 - (samples % 30);
+  const targetEl  = document.getElementById('thresh-target-txt');
+  if (targetEl) {
+    if (samples < 10) {
+      targetEl.textContent = 'Veri toplanıyor (' + samples + '/10)';
+      targetEl.style.color = 'var(--dim)';
+    } else {
+      targetEl.textContent = nextCalib + ' taramada kalibrasyon';
+      targetEl.style.color = nextCalib <= 5 ? 'var(--yellow)' : 'var(--cyan)';
+    }
+  }
 }
 
 function setCalibFactor(id, pct, cls, val) {
