@@ -321,6 +321,58 @@ canvas#chart {
   75%  { content: '...'; }
 }
 
+
+/* ── KALİBRASYON KARTI ── */
+.card-calib { grid-column: 3; }
+.calib-factor {
+  display: flex; align-items: center; gap: 10px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border);
+}
+.calib-factor:last-child { border: none; }
+.calib-name  { font-size: 9px; color: var(--dim); letter-spacing: 1px; width: 100px; flex-shrink:0; }
+.calib-bar-wrap {
+  flex: 1; height: 4px;
+  background: var(--bg3); border-radius: 2px; overflow: hidden;
+}
+.calib-bar-fill {
+  height: 100%; border-radius: 2px;
+  transition: width 1s ease, background 1s ease;
+}
+.calib-bar-fill.up   { background: var(--red); }
+.calib-bar-fill.down { background: var(--green); }
+.calib-bar-fill.mid  { background: var(--yellow); }
+.calib-val  { font-size: 9px; width: 40px; text-align: right; flex-shrink:0; }
+.calib-val.up   { color: var(--red); }
+.calib-val.down { color: var(--green); }
+.calib-val.mid  { color: var(--yellow); }
+
+.thresh-change {
+  margin-top: 8px; font-size: 9px;
+  display: flex; gap: 6px; align-items: center;
+}
+.thresh-change-val { color: var(--cyan); }
+.thresh-history { margin-top: 8px; }
+.thresh-hist-item {
+  display: inline-block; width: 6px; height: 6px;
+  border-radius: 1px; margin-right: 2px;
+  background: var(--border);
+  vertical-align: middle;
+}
+
+/* ── SON TARAMA ── */
+.last-scan-bar {
+  padding: 6px 24px;
+  background: var(--bg3);
+  border-top: 1px solid var(--border);
+  display: flex; gap: 32px; align-items: center;
+  font-size: 9px; color: var(--dim); letter-spacing: 1px;
+}
+.last-scan-bar span { color: var(--text); }
+.last-scan-bar .green { color: var(--green); }
+.last-scan-bar .red   { color: var(--red); }
+.last-scan-bar .yellow{ color: var(--yellow); }
+
 /* fade in */
 .fade-in { animation: fadeIn 0.4s ease; }
 @keyframes fadeIn { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:translateY(0)} }
@@ -388,11 +440,11 @@ canvas#chart {
       <div class="threshold-bar" id="thresh-bar" style="width:35%"></div>
     </div>
     <div class="threshold-labels">
-      <span>20 (agresif)</span>
-      <span>60 (muhafazakâr)</span>
+      <span id="thresh-min">20 (agresif)</span>
+      <span id="thresh-max">60 (muhafazakâr)</span>
     </div>
-    <div style="margin-top:12px;font-size:9px;color:var(--dim)">
-      Bot her gece otomatik kalibre eder
+    <div style="margin-top:8px;font-size:9px;color:var(--dim)">
+      Her 20s'de akıllı kalibrasyon çalışır
     </div>
   </div>
 
@@ -419,6 +471,42 @@ canvas#chart {
     </div>
   </div>
 
+
+  <!-- KALİBRASYON 4 ETKEN -->
+  <div class="card card-calib fade-in">
+    <div class="card-label">KALİBRASYON ETKENLERİ</div>
+    <div id="calib-factors">
+      <div class="calib-factor">
+        <div class="calib-name">VOLATİLİTE</div>
+        <div class="calib-bar-wrap"><div class="calib-bar-fill mid" id="cf-vol-bar" style="width:50%"></div></div>
+        <div class="calib-val mid" id="cf-vol-val">—</div>
+      </div>
+      <div class="calib-factor">
+        <div class="calib-name">FIRSAT KALİTESİ</div>
+        <div class="calib-bar-wrap"><div class="calib-bar-fill mid" id="cf-qual-bar" style="width:50%"></div></div>
+        <div class="calib-val mid" id="cf-qual-val">—</div>
+      </div>
+      <div class="calib-factor">
+        <div class="calib-name">SPREAD</div>
+        <div class="calib-bar-wrap"><div class="calib-bar-fill mid" id="cf-spread-bar" style="width:50%"></div></div>
+        <div class="calib-val mid" id="cf-spread-val">—</div>
+      </div>
+      <div class="calib-factor">
+        <div class="calib-name">ACİL PİYASA</div>
+        <div class="calib-bar-wrap"><div class="calib-bar-fill mid" id="cf-urgent-bar" style="width:50%"></div></div>
+        <div class="calib-val mid" id="cf-urgent-val">—</div>
+      </div>
+    </div>
+    <div class="thresh-change" style="margin-top:16px">
+      <span style="color:var(--dim)">SON DEĞİŞİM:</span>
+      <span class="thresh-change-val" id="thresh-change-txt">—</span>
+    </div>
+    <div class="thresh-change">
+      <span style="color:var(--dim)">HEDEF EŞİK:</span>
+      <span class="thresh-change-val" id="thresh-target-txt">—</span>
+    </div>
+  </div>
+
   <!-- FIRSAT LİSTESİ -->
   <div class="card card-opportunities fade-in">
     <div class="opp-header">
@@ -430,6 +518,16 @@ canvas#chart {
     </div>
   </div>
 
+</div>
+
+<!-- SON TARAMA DURUM BARI -->
+<div class="last-scan-bar">
+  <div>SON TARAMA: <span id="bar-time">—</span></div>
+  <div>TARAMA: <span class="green" id="bar-scans">—</span></div>
+  <div>ATLAMA: <span class="red" id="bar-skips">—</span></div>
+  <div>FIRSAT: <span class="yellow" id="bar-opps">—</span></div>
+  <div>EŞİK: <span class="green" id="bar-thresh">—</span></div>
+  <div style="margin-left:auto">YENİLENME: 30s</div>
 </div>
 
 <script>
@@ -573,6 +671,12 @@ function updateDashboard(data) {
     chgEl.textContent = (chg >= 0 ? '▲ +' : '▼ ') + chg.toFixed(2) + '%';
     chgEl.className   = 'btc-change ' + (chg >= 0 ? 'up' : 'down');
     document.getElementById('btc-source').textContent = src;
+    const high = data.btc_high_24h || 0;
+    const low  = data.btc_low_24h  || 0;
+    if (high && low) {
+      document.getElementById('btc-hl').textContent =
+        'H: $' + Math.round(high).toLocaleString() + '  L: $' + Math.round(low).toLocaleString();
+    }
 
     // Grafik güncelle
     if (lastPrice === 0) initChart(price);
@@ -593,13 +697,20 @@ function updateDashboard(data) {
 
   document.getElementById('stat-scans').textContent  = scans;
   document.getElementById('stat-skips').textContent  = skips + ' atlama';
-  document.getElementById('stat-opps').textContent   = opps;
+  const totalOpps = data.total_opportunities || opps;
+  document.getElementById('stat-opps').textContent   = totalOpps;
   document.getElementById('stat-source').textContent = src;
 
   // Eşik göstergesi
-  document.getElementById('thresh-val').textContent  = thresh;
-  const pct = ((thresh - 20) / (60 - 20)) * 100;
+  document.getElementById('thresh-val').textContent  = thresh.toFixed ? thresh.toFixed(1) : thresh;
+  const tMin = data.threshold_min || 20;
+  const tMax = data.threshold_max || 60;
+  const pct  = ((thresh - tMin) / (tMax - tMin)) * 100;
   document.getElementById('thresh-bar').style.width  = pct + '%';
+  if (document.getElementById('thresh-min'))
+    document.getElementById('thresh-min').textContent = tMin + ' (agresif)';
+  if (document.getElementById('thresh-max'))
+    document.getElementById('thresh-max').textContent = tMax + ' (muhafazakâr)';
 
   // 24 saat özeti
   document.getElementById('sum-scans').textContent  = scans;
@@ -609,6 +720,18 @@ function updateDashboard(data) {
 
   // Fırsatlar
   renderOpportunities(data.opportunities || []);
+
+  // Kalibrasyon etkenlerini güncelle
+  updateCalibFactors(data);
+  // Gerçek calib verisi varsa override et
+  if (data.calib) updateCalibFromBot(data.calib, data.active_threshold);
+
+  // Alt durum barı
+  document.getElementById('bar-time').textContent   = (data.last_update || '').slice(11,19) + ' UTC';
+  document.getElementById('bar-scans').textContent  = scans;
+  document.getElementById('bar-skips').textContent  = skips;
+  document.getElementById('bar-opps').textContent   = opps;
+  document.getElementById('bar-thresh').textContent = thresh + '/100';
 }
 
 // ══════════════════════════════════════════════
@@ -657,6 +780,7 @@ function renderOpportunities(opps) {
           <div class="opp-score-num">${o.score}/100</div>
         </div>
       </td>
+      <td style="font-size:9px;color:var(--text)">${o.momentum_label || '—'}</td>
       <td><span class="opp-action ${actCls}">${o.action || '—'}</span></td>
       <td style="color:var(--dim);font-size:9px">${o.hours_left || 0}s kaldı</td>
     </tr>`;
@@ -672,12 +796,106 @@ function renderOpportunities(opps) {
           <th>OLASILIK</th>
           <th>EDGE</th>
           <th>SKOR</th>
+          <th>MOMENTUM</th>
           <th>ÖNERİ</th>
           <th>SÜRE</th>
         </tr>
       </thead>
       <tbody>${rows}</tbody>
     </table>`;
+}
+
+
+// ══════════════════════════════════════════════
+//  KALİBRASYON ETKENLERİ
+// ══════════════════════════════════════════════
+let prevThreshold = null;
+
+function updateCalibFactors(data) {
+  const vol    = Math.abs(data.btc_change_pct || 0);
+  const thresh = data.active_threshold || 35;
+  const opps   = data.opportunities || [];
+  const avgScore  = opps.length > 0
+    ? opps.reduce((s,o) => s + (o.score||0), 0) / opps.length : 50;
+  const avgSpread = opps.length > 0
+    ? opps.reduce((s,o) => s + (o.spread_pct||0), 0) / opps.length : 2;
+  const urgentCount = opps.filter(o => o.urgent).length;
+
+  // Volatilite — yüksekse kötü (eşik yükselir)
+  const volPct = Math.min(vol / 5 * 100, 100);
+  const volCls = vol > 3 ? 'up' : vol < 1 ? 'down' : 'mid';
+  setCalibFactor('vol', volPct, volCls, vol.toFixed(2) + '%');
+
+  // Fırsat kalitesi — yüksekse iyi (eşik düşer)
+  const qualPct = Math.min(avgScore / 100 * 100, 100);
+  const qualCls = avgScore > 60 ? 'down' : avgScore < 40 ? 'up' : 'mid';
+  setCalibFactor('qual', qualPct, qualCls, avgScore.toFixed(0) + '/100');
+
+  // Spread — düşükse iyi (eşik düşer)
+  const spreadPct = Math.min(avgSpread / 5 * 100, 100);
+  const spreadCls = avgSpread > 3 ? 'up' : avgSpread < 1 ? 'down' : 'mid';
+  setCalibFactor('spread', spreadPct, spreadCls, avgSpread.toFixed(2) + '%');
+
+  // Acil piyasa — çoksa iyi (eşik düşer)
+  const urgPct = Math.min(urgentCount / 5 * 100, 100);
+  const urgCls = urgentCount > 3 ? 'down' : urgentCount === 0 ? 'up' : 'mid';
+  setCalibFactor('urgent', urgPct, urgCls, urgentCount + ' adet');
+
+  // Eşik değişimi
+  if (prevThreshold !== null && prevThreshold !== thresh) {
+    const diff = thresh - prevThreshold;
+    const sign = diff > 0 ? '+' : '';
+    document.getElementById('thresh-change-txt').textContent =
+      prevThreshold.toFixed(1) + ' → ' + thresh.toFixed(1) + ' (' + sign + diff.toFixed(1) + ')';
+    document.getElementById('thresh-change-txt').style.color =
+      diff > 0 ? 'var(--red)' : 'var(--green)';
+  } else if (prevThreshold === null) {
+    document.getElementById('thresh-change-txt').textContent = 'İzleniyor...';
+  }
+  prevThreshold = thresh;
+
+  // Hedef eşik (tahmin)
+  const target = Math.round(40 + (vol > 2 ? 5 : -5) + (avgScore > 60 ? -4 : 4));
+  document.getElementById('thresh-target-txt').textContent = target + '/100';
+}
+
+
+function updateCalibFromBot(c, thresh) {
+  // Volatilite
+  const vol = c.avg_volatility || 0;
+  const volPct = Math.min(vol / 3 * 100, 100);
+  const volCls = vol > 2 ? 'up' : vol < 0.5 ? 'down' : 'mid';
+  setCalibFactor('vol', volPct, volCls, vol.toFixed(3) + '%');
+
+  // Fırsat kalitesi
+  const score = c.avg_score || 50;
+  const qualPct = Math.min(score, 100);
+  const qualCls = score > 60 ? 'down' : score < 35 ? 'up' : 'mid';
+  setCalibFactor('qual', qualPct, qualCls, score.toFixed(0) + '/100');
+
+  // Spread
+  const spread = c.avg_spread || 0;
+  const spreadPct = Math.min(spread / 5 * 100, 100);
+  const spreadCls = spread > 3 ? 'up' : spread < 1 ? 'down' : 'mid';
+  setCalibFactor('spread', spreadPct, spreadCls, spread.toFixed(2) + '%');
+
+  // Acil piyasa
+  const urgent = c.avg_urgent || 0;
+  const urgPct = Math.min(urgent / 5 * 100, 100);
+  const urgCls = urgent > 3 ? 'down' : urgent === 0 ? 'up' : 'mid';
+  setCalibFactor('urgent', urgPct, urgCls, urgent.toFixed(1) + ' adet');
+
+  // Örneklem sayısı
+  const samples = c.vol_samples || 0;
+  document.getElementById('thresh-target-txt').textContent =
+    samples + ' ölçüm ile hesaplandı';
+}
+
+function setCalibFactor(id, pct, cls, val) {
+  const bar = document.getElementById('cf-' + id + '-bar');
+  const txt = document.getElementById('cf-' + id + '-val');
+  if (bar) { bar.style.width = pct + '%'; bar.className = 'calib-bar-fill ' + cls; }
+  if (txt) { txt.textContent = val; txt.className = 'calib-val ' + cls; }
 }
 
 // ══════════════════════════════════════════════
