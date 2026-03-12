@@ -373,6 +373,60 @@ canvas#chart {
 .last-scan-bar .red   { color: var(--red); }
 .last-scan-bar .yellow{ color: var(--yellow); }
 
+
+/* ── RADAR PANELİ ── */
+.card-radar { grid-column: 1 / 4; padding: 0; }
+.radar-header {
+  padding: 12px 24px;
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; gap: 12px;
+  background: var(--bg3);
+}
+.radar-ceiling {
+  margin-left: auto;
+  font-size: 9px; color: var(--dim); letter-spacing: 1px;
+}
+.radar-ceiling span { color: var(--yellow); font-family: 'Syne', sans-serif; }
+.radar-table { width: 100%; border-collapse: collapse; }
+.radar-table th {
+  padding: 6px 16px; text-align: left;
+  font-size: 9px; letter-spacing: 2px; color: var(--dim);
+  border-bottom: 1px solid var(--border);
+  background: var(--bg3); font-weight: 400;
+}
+.radar-table td {
+  padding: 9px 16px;
+  border-bottom: 1px solid rgba(15,32,48,0.8);
+  font-size: 10px;
+}
+.radar-table tr:last-child td { border: none; }
+.radar-table tr:hover td { background: rgba(0,232,122,0.02); }
+.radar-q    { color: var(--text); max-width: 320px; }
+.radar-score-wrap { display: flex; align-items: center; gap: 8px; min-width: 140px; }
+.radar-score-bg {
+  flex: 1; height: 3px; background: var(--bg3);
+  border-radius: 2px; overflow: hidden;
+}
+.radar-score-fill { height: 100%; border-radius: 2px; transition: width 0.8s ease; }
+.radar-score-fill.near  { background: var(--yellow); box-shadow: 0 0 4px #ffd00066; }
+.radar-score-fill.mid   { background: var(--cyan);   box-shadow: 0 0 4px #00c8ff44; }
+.radar-score-fill.far   { background: var(--dim); }
+.radar-score-num { font-size: 10px; width: 45px; text-align: right; }
+.radar-score-num.near  { color: var(--yellow); }
+.radar-score-num.mid   { color: var(--cyan); }
+.radar-score-num.far   { color: var(--dim); }
+.gap-badge {
+  font-size: 8px; padding: 2px 6px;
+  border-radius: 2px; letter-spacing: 1px;
+}
+.gap-badge.near  { color: var(--yellow); border: 1px solid var(--yellow); }
+.gap-badge.mid   { color: var(--cyan);   border: 1px solid var(--cyan); }
+.gap-badge.far   { color: var(--dim);    border: 1px solid var(--dim); }
+.radar-empty {
+  padding: 24px; text-align: center;
+  color: var(--dim); font-size: 10px; letter-spacing: 2px;
+}
+
 /* fade in */
 .fade-in { animation: fadeIn 0.4s ease; }
 @keyframes fadeIn { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:translateY(0)} }
@@ -504,6 +558,21 @@ canvas#chart {
     <div class="thresh-change">
       <span style="color:var(--dim)">SONRAKİ KALİBRASYON:</span>
       <span class="thresh-change-val" id="thresh-target-txt">—</span>
+    </div>
+  </div>
+
+  <!-- RADAR — EŞİK ALTI İZLEME -->
+  <div class="card card-radar fade-in">
+    <div class="radar-header">
+      <div class="card-label" style="margin:0">◎ RADAR — EŞİK ALTI PİYASALAR</div>
+      <div class="radar-ceiling">
+        PİYASA TAVANI: <span id="radar-ceiling">—</span> &nbsp;|&nbsp;
+        EŞİK: <span id="radar-threshold" style="color:var(--green)">—</span> &nbsp;|&nbsp;
+        AÇIK: <span id="radar-gap" style="color:var(--yellow)">—</span> puan fark
+      </div>
+    </div>
+    <div id="radar-body">
+      <div class="radar-empty">Veri bekleniyor...</div>
     </div>
   </div>
 
@@ -724,6 +793,9 @@ function updateDashboard(data) {
   // Fırsatlar
   renderOpportunities(data.opportunities || []);
 
+  // Radar — eşik altı izleme
+  renderRadar(data.radar || [], data.market_ceiling, data.active_threshold);
+
   // Kalibrasyon etkenlerini güncelle
   updateCalibFactors(data);
   // Gerçek calib verisi varsa override et
@@ -914,6 +986,66 @@ function setCalibFactor(id, pct, cls, val) {
   const txt = document.getElementById('cf-' + id + '-val');
   if (bar) { bar.style.width = pct + '%'; bar.className = 'calib-bar-fill ' + cls; }
   if (txt) { txt.textContent = val; txt.className = 'calib-val ' + cls; }
+}
+
+
+// ══════════════════════════════════════════════
+//  RADAR — EŞİK ALTI İZLEME
+// ══════════════════════════════════════════════
+function renderRadar(candidates, ceiling, threshold) {
+  const body    = document.getElementById('radar-body');
+  const ceilEl  = document.getElementById('radar-ceiling');
+  const thEl    = document.getElementById('radar-threshold');
+  const gapEl   = document.getElementById('radar-gap');
+
+  if (ceilEl)  ceilEl.textContent  = ceiling ? ceiling.toFixed(1) + '/100' : '—';
+  if (thEl)    thEl.textContent    = threshold ? threshold.toFixed(1) + '/100' : '—';
+  if (gapEl) {
+    const gap = ceiling && threshold ? (threshold - ceiling).toFixed(1) : '—';
+    gapEl.textContent = gap;
+    if (gapEl.parentElement) {
+      gapEl.style.color = gap <= 5 ? 'var(--yellow)' : gap <= 10 ? 'var(--cyan)' : 'var(--dim)';
+    }
+  }
+
+  if (!candidates || candidates.length === 0) {
+    body.innerHTML = '<div class="radar-empty">Tarama yapılıyor...</div>';
+    return;
+  }
+
+  const rows = candidates.map(c => {
+    const gap     = threshold - c.score;
+    const cls     = gap <= 5 ? 'near' : gap <= 12 ? 'mid' : 'far';
+    const pct     = Math.min(c.score / 100 * 100, 100);
+    const dirTxt  = c.direction === 'above' ? '▲' : '▼';
+    const edgeCls = c.edge_pct > 0 ? 'color:var(--green)' : 'color:var(--red)';
+    const gapTxt  = gap <= 0 ? 'EŞİK GEÇTİ!' : gap.toFixed(0) + ' puan eksik';
+
+    return `<tr>
+      <td class="radar-q">${dirTxt} ${c.question}</td>
+      <td style="color:var(--cyan);font-size:10px">$${Number(c.target||0).toLocaleString()}</td>
+      <td>
+        <div class="radar-score-wrap">
+          <div class="radar-score-bg">
+            <div class="radar-score-fill ${cls}" style="width:${pct}%"></div>
+          </div>
+          <div class="radar-score-num ${cls}">${c.score}/100</div>
+        </div>
+      </td>
+      <td style="${edgeCls}">${c.edge_pct > 0 ? '+' : ''}${(c.edge_pct||0).toFixed(1)}%</td>
+      <td><span class="gap-badge ${cls}">${gapTxt}</span></td>
+      <td style="color:var(--dim);font-size:9px">${c.hours_left||0}s kaldı</td>
+    </tr>`;
+  }).join('');
+
+  body.innerHTML = `
+    <table class="radar-table">
+      <thead><tr>
+        <th>PİYASA</th><th>HEDEF</th><th>SKOR</th>
+        <th>EDGE</th><th>EŞİĞE UZAKLIK</th><th>SÜRE</th>
+      </tr></thead>
+      <tbody>${rows}</tbody>
+    </table>`;
 }
 
 // ══════════════════════════════════════════════
