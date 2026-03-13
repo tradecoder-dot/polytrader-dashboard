@@ -3,301 +3,550 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>BTCBOT</title>
+<title>BTC Bot — Dashboard</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600&family=IBM+Plex+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 :root {
-  --bg:      #0a0a0a;
-  --bg2:     #111111;
-  --bg3:     #191919;
-  --border:  #2a2a2a;
-  --border2: #333333;
-  --dim:     #555555;
-  --mid:     #888888;
-  --text:    #cccccc;
-  --white:   #f0f0f0;
-  --mono:    'IBM Plex Mono', monospace;
+  --bg:       #f5f5f7;
+  --surface:  #ffffff;
+  --border:   #e8e8ec;
+  --border2:  #d8d8de;
+  --text:     #1a1a2e;
+  --sub:      #6b6b80;
+  --dim:      #9999aa;
+  --accent:   #1a1a2e;
+  --up:       #16a34a;
+  --up-bg:    #f0fdf4;
+  --dn:       #dc2626;
+  --dn-bg:    #fef2f2;
+  --warn:     #d97706;
+  --warn-bg:  #fffbeb;
+  --blue:     #2563eb;
+  --blue-bg:  #eff6ff;
+  --mono:     'DM Mono', monospace;
+  --sans:     'DM Sans', sans-serif;
+  --radius:   12px;
+  --shadow:   0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+  --shadow2:  0 4px 12px rgba(0,0,0,0.08);
 }
 
 html, body {
   background: var(--bg);
   color: var(--text);
-  font-family: var(--mono);
-  font-size: 12px;
+  font-family: var(--sans);
+  font-size: 14px;
   line-height: 1.5;
   min-height: 100vh;
 }
 
-header {
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 14px 24px;
+/* ── SIDEBAR ── */
+.sidebar {
+  position: fixed; left: 0; top: 0; bottom: 0;
+  width: 220px;
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+  display: flex; flex-direction: column;
+  z-index: 100;
+}
+.sidebar-logo {
+  padding: 24px 20px 20px;
   border-bottom: 1px solid var(--border);
-  position: sticky; top: 0; z-index: 100;
+}
+.logo-mark {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 36px; height: 36px; border-radius: 10px;
+  background: var(--accent); color: #fff;
+  font-family: var(--mono); font-size: 13px; font-weight: 500;
+  margin-bottom: 10px;
+}
+.logo-name { font-size: 15px; font-weight: 600; color: var(--text); }
+.logo-sub  { font-size: 11px; color: var(--dim); margin-top: 1px; }
+
+.sidebar-nav { padding: 12px 10px; flex: 1; }
+.nav-label { font-size: 10px; font-weight: 500; color: var(--dim); letter-spacing: 1.5px; padding: 8px 10px 6px; text-transform: uppercase; }
+.nav-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 9px 10px; border-radius: 8px;
+  font-size: 13px; font-weight: 500; color: var(--sub);
+  cursor: pointer; transition: all .15s ease;
+  margin-bottom: 2px;
+}
+.nav-item:hover { background: var(--bg); color: var(--text); }
+.nav-item.active { background: var(--accent); color: #fff; }
+.nav-item .icon { font-size: 15px; width: 20px; text-align: center; }
+.nav-badge {
+  margin-left: auto; font-size: 10px; font-weight: 600;
+  background: var(--blue); color: #fff;
+  padding: 1px 7px; border-radius: 20px;
+}
+.nav-badge.green { background: var(--up); }
+
+.sidebar-footer {
+  padding: 16px 20px;
+  border-top: 1px solid var(--border);
+}
+.status-dot {
+  display: inline-flex; align-items: center; gap: 7px;
+  font-size: 12px; color: var(--sub);
+}
+.dot { width: 7px; height: 7px; border-radius: 50%; background: var(--up); animation: pulse 2s ease-in-out infinite; }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+
+/* ── MAIN ── */
+.main { margin-left: 220px; padding: 28px 28px 40px; min-height: 100vh; }
+
+/* ── TOPBAR ── */
+.topbar {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 24px;
+}
+.topbar-left h1 { font-size: 22px; font-weight: 600; color: var(--text); }
+.topbar-left p  { font-size: 13px; color: var(--sub); margin-top: 2px; }
+.topbar-right { display: flex; align-items: center; gap: 10px; }
+.time-chip {
+  display: flex; align-items: center; gap: 6px;
+  padding: 7px 14px; border-radius: 8px;
+  background: var(--surface); border: 1px solid var(--border);
+  font-size: 12px; font-family: var(--mono); color: var(--sub);
+}
+.refresh-btn {
+  padding: 7px 16px; border-radius: 8px;
+  background: var(--accent); color: #fff;
+  font-size: 12px; font-weight: 500; border: none; cursor: pointer;
+  font-family: var(--sans); transition: opacity .15s;
+}
+.refresh-btn:hover { opacity: .85; }
+
+/* ── CARDS ── */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+.card-pad { padding: 20px; }
+
+/* ── TOP STATS ROW ── */
+.stats-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+  margin-bottom: 20px;
+}
+.stat-card { padding: 18px 20px; }
+.stat-card-top { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 10px; }
+.stat-card-label { font-size: 12px; font-weight: 500; color: var(--sub); }
+.stat-icon {
+  width: 34px; height: 34px; border-radius: 9px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px;
+}
+.stat-icon.blue   { background: var(--blue-bg);  }
+.stat-icon.green  { background: var(--up-bg);    }
+.stat-icon.yellow { background: var(--warn-bg);  }
+.stat-icon.red    { background: var(--dn-bg);    }
+.stat-num { font-size: 26px; font-weight: 600; color: var(--text); line-height: 1; margin-bottom: 6px; }
+.stat-change {
+  display: inline-flex; align-items: center; gap: 4px;
+  font-size: 12px; font-weight: 500; padding: 2px 8px;
+  border-radius: 6px;
+}
+.stat-change.up  { color: var(--up);   background: var(--up-bg);  }
+.stat-change.dn  { color: var(--dn);   background: var(--dn-bg);  }
+.stat-change.neu { color: var(--warn); background: var(--warn-bg); }
+
+/* ── MID ROW ── */
+.mid-row {
+  display: grid;
+  grid-template-columns: 1fr 320px;
+  gap: 14px;
+  margin-bottom: 20px;
+}
+
+/* Chart card */
+.chart-card { padding: 20px; }
+.chart-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 16px; }
+.chart-title { font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 2px; }
+.chart-sub   { font-size: 12px; color: var(--sub); }
+.chart-price { font-size: 28px; font-weight: 600; color: var(--text); font-family: var(--mono); }
+.chart-wrap  { height: 140px; position: relative; }
+canvas       { width: 100%; height: 100%; display: block; }
+
+/* Threshold card */
+.thresh-card { padding: 20px; }
+.thresh-big  { font-size: 44px; font-weight: 600; color: var(--text); font-family: var(--mono); line-height: 1; }
+.thresh-unit { font-size: 14px; color: var(--sub); font-weight: 400; }
+.thresh-track {
+  height: 6px; background: var(--bg); border-radius: 99px;
+  margin: 16px 0 8px; overflow: hidden;
+}
+.thresh-fill {
+  height: 100%; border-radius: 99px;
+  background: linear-gradient(90deg, var(--up), var(--warn), var(--dn));
+  transition: width 1s ease;
+}
+.thresh-row { display: flex; justify-content: space-between; font-size: 11px; color: var(--dim); margin-bottom: 16px; }
+.calib-rows { margin-top: 4px; }
+.crow {
+  display: flex; align-items: center; gap: 10px;
+  padding: 7px 0; border-bottom: 1px solid var(--border);
+}
+.crow:last-child { border: none; }
+.cname { font-size: 11px; color: var(--sub); width: 110px; flex-shrink: 0; font-weight: 500; }
+.ctrack { flex: 1; height: 4px; background: var(--bg); border-radius: 99px; overflow: hidden; }
+.cfill  { height: 100%; border-radius: 99px; background: var(--blue); transition: width .8s ease; }
+.cfill.lo  { background: var(--dim); }
+.cfill.mid { background: var(--warn); }
+.cval  { font-size: 11px; color: var(--sub); width: 80px; text-align: right; font-family: var(--mono); flex-shrink: 0; }
+
+/* ── RADAR ── */
+.radar-card { margin-bottom: 20px; overflow: hidden; }
+.panel-head {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 20px; border-bottom: 1px solid var(--border);
   background: var(--bg);
 }
-.logo { font-size: 13px; font-weight: 600; letter-spacing: 4px; color: var(--white); }
-.logo span { color: var(--dim); font-weight: 300; }
-.hdr-right { display: flex; align-items: center; gap: 24px; font-size: 10px; color: var(--dim); letter-spacing: 1px; }
-.live-dot {
-  width: 5px; height: 5px; border-radius: 50%;
-  background: var(--white); display: inline-block; margin-right: 6px;
-  animation: pulse 2s ease-in-out infinite;
-}
-@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.3} }
-
-.layout {
-  display: grid;
-  grid-template-columns: 1fr 1fr 1fr 260px;
-  gap: 1px;
-  background: var(--border);
-}
-
-.cell { background: var(--bg); padding: 20px 24px; }
-.lbl  { font-size: 9px; letter-spacing: 3px; color: var(--dim); margin-bottom: 12px; }
-
-/* Price */
-.price-big { font-size: 40px; font-weight: 600; color: var(--white); letter-spacing: -1px; line-height: 1; }
-.price-row { display: flex; gap: 14px; margin-top: 10px; align-items: center; flex-wrap: wrap; }
-.price-chg { font-size: 13px; font-weight: 500; }
-.price-chg.up { color: var(--white); }
-.price-chg.dn { color: var(--mid); }
-.price-hl  { font-size: 10px; color: var(--dim); }
-.price-src { font-size: 9px; color: var(--dim); border: 1px solid var(--border2); padding: 2px 8px; margin-left: auto; }
-
-/* Stat */
-.stat-big { font-size: 30px; font-weight: 500; color: var(--white); line-height: 1; margin-bottom: 4px; }
-.stat-sub { font-size: 10px; color: var(--dim); }
-
-/* Status panel */
-.cell-status { grid-column: 4; grid-row: 1 / 3; background: var(--bg2); }
-.srow { display: flex; justify-content: space-between; align-items: center; padding: 9px 0; border-bottom: 1px solid var(--border); }
-.srow:last-child { border: none; }
-.skey { font-size: 9px; color: var(--dim); letter-spacing: 1px; }
-.sval { font-size: 11px; color: var(--white); }
-
-/* Chart */
-.cell-chart { grid-column: 1 / 4; padding: 0; height: 110px; overflow: hidden; }
-canvas { width: 100%; height: 100%; display: block; }
-
-/* Threshold */
-.thresh-num { font-size: 28px; font-weight: 500; color: var(--white); }
-.thresh-unit { font-size: 12px; color: var(--dim); }
-.bar-track { height: 2px; background: var(--bg3); margin: 12px 0 6px; }
-.bar-fill  { height: 100%; background: var(--white); transition: width 1s ease; }
-.bar-labels { display: flex; justify-content: space-between; font-size: 9px; color: var(--dim); }
-.thresh-note { margin-top: 10px; font-size: 9px; color: var(--dim); }
-
-/* Calib */
-.crow { display: flex; align-items: center; gap: 12px; padding: 7px 0; border-bottom: 1px solid var(--border); }
-.crow:last-child { border: none; }
-.cname { font-size: 9px; color: var(--dim); width: 120px; flex-shrink: 0; letter-spacing: 1px; }
-.ctrack { flex: 1; height: 2px; background: var(--bg3); }
-.cfill  { height: 100%; background: var(--white); transition: width .8s ease; }
-.cfill.lo { background: var(--dim); }
-.cval  { font-size: 10px; color: var(--text); width: 90px; text-align: right; flex-shrink: 0; }
-.calib-footer { margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--border); display: flex; gap: 20px; font-size: 9px; color: var(--dim); }
-.calib-footer span { color: var(--text); }
-
-/* Radar + Opps */
-.cell-full { grid-column: 1 / 4; padding: 0; }
-.cell-full4 { grid-column: 1 / 5; padding: 0; }
-.panel-head { display: flex; justify-content: space-between; align-items: center; padding: 10px 24px; border-bottom: 1px solid var(--border); background: var(--bg2); }
-.panel-head-l { font-size: 9px; color: var(--dim); letter-spacing: 3px; }
-.panel-head-r { font-size: 9px; color: var(--dim); display: flex; gap: 16px; }
-.panel-head-r span { color: var(--text); }
+.panel-title { font-size: 13px; font-weight: 600; color: var(--text); }
+.panel-meta  { display: flex; gap: 16px; font-size: 12px; color: var(--sub); }
+.panel-meta b { color: var(--text); font-weight: 600; }
 
 table { width: 100%; border-collapse: collapse; }
-th { padding: 7px 24px; text-align: left; font-size: 9px; letter-spacing: 2px; color: var(--dim); border-bottom: 1px solid var(--border); font-weight: 400; background: var(--bg2); }
-td { padding: 10px 24px; border-bottom: 1px solid var(--border); font-size: 10px; color: var(--text); }
+th {
+  padding: 10px 20px; text-align: left;
+  font-size: 11px; font-weight: 600; color: var(--sub);
+  border-bottom: 1px solid var(--border);
+  background: var(--bg); letter-spacing: .3px;
+  text-transform: uppercase;
+}
+td {
+  padding: 12px 20px;
+  border-bottom: 1px solid var(--border);
+  font-size: 13px; color: var(--text);
+}
 tr:last-child td { border: none; }
-tr:hover td { background: var(--bg2); }
+tr:hover td { background: var(--bg); transition: background .1s; }
 
-.tq   { color: var(--white); max-width: 320px; }
-.bwrap { display: flex; align-items: center; gap: 8px; min-width: 120px; }
-.bbg   { flex: 1; height: 2px; background: var(--bg3); }
-.bfill { height: 100%; background: var(--white); transition: width .8s ease; }
-.bfill.lo { background: var(--dim); }
+.tq   { font-weight: 500; max-width: 300px; }
+.tq small { display: block; font-size: 11px; color: var(--sub); font-weight: 400; margin-top: 1px; }
+.bwrap { display: flex; align-items: center; gap: 8px; }
+.bbg   { flex: 1; height: 4px; background: var(--border); border-radius: 99px; min-width: 80px; overflow: hidden; }
+.bfill { height: 100%; border-radius: 99px; background: var(--blue); transition: width .8s; }
+.bfill.lo  { background: var(--border2); }
+.bfill.hi  { background: var(--up); }
+.bnum  { font-size: 12px; font-family: var(--mono); color: var(--sub); width: 46px; text-align: right; flex-shrink: 0; }
 
-.gtag { font-size: 8px; padding: 2px 6px; border: 1px solid var(--border2); color: var(--mid); letter-spacing: 1px; }
-.gtag.near { border-color: var(--white); color: var(--white); }
+.badge {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 3px 8px; border-radius: 6px;
+  font-size: 11px; font-weight: 500;
+}
+.badge.gap-close { background: var(--up-bg);   color: var(--up);   }
+.badge.gap-mid   { background: var(--warn-bg);  color: var(--warn); }
+.badge.gap-far   { background: var(--bg);       color: var(--sub);  }
+.badge.gap-pass  { background: var(--up-bg);    color: var(--up);   font-weight: 700; }
 
-.ayes  { color: var(--white); font-weight: 600; }
-.ano   { color: var(--mid); font-weight: 600; }
-.await { color: var(--dim); }
-.utag  { font-size: 8px; border: 1px solid var(--white); padding: 1px 5px; margin-left: 6px; color: var(--white); animation: blink 1.5s step-end infinite; }
-@keyframes blink { 50%{opacity:0} }
+.edge-pos { color: var(--up);   font-family: var(--mono); font-weight: 500; }
+.edge-neg { color: var(--dn);   font-family: var(--mono); font-weight: 500; }
+.dir-up   { color: var(--up);   font-size: 12px; }
+.dir-dn   { color: var(--dn);   font-size: 12px; }
 
-.empty { padding: 32px 24px; text-align: center; font-size: 10px; color: var(--dim); letter-spacing: 2px; }
+.urgent-tag {
+  display: inline-flex; align-items: center;
+  padding: 1px 6px; border-radius: 4px;
+  background: var(--dn-bg); color: var(--dn);
+  font-size: 10px; font-weight: 600; margin-left: 6px;
+  animation: blink 1.5s step-end infinite;
+}
+@keyframes blink { 50%{opacity:.3} }
 
-/* Summary */
-.cell-sum { grid-column: 4; background: var(--bg2); }
-.sumb { margin-bottom: 20px; }
-.sumn { font-size: 26px; font-weight: 500; color: var(--white); line-height: 1; margin-bottom: 2px; }
-.suml { font-size: 9px; color: var(--dim); letter-spacing: 2px; }
-.sdiv { height: 1px; background: var(--border); margin: 14px 0; }
-.snext { font-size: 9px; color: var(--dim); margin-top: 8px; line-height: 1.7; }
-.snext span { color: var(--text); }
+.action-yes  { color: var(--up);   font-weight: 600; font-size: 12px; }
+.action-no   { color: var(--dn);   font-weight: 600; font-size: 12px; }
+.action-wait { color: var(--dim);  font-size: 12px; }
+
+.empty {
+  padding: 36px; text-align: center;
+  font-size: 13px; color: var(--sub);
+}
+.empty-icon { font-size: 28px; margin-bottom: 8px; opacity: .4; }
+
+/* ── BOTTOM ROW ── */
+.bottom-row {
+  display: grid;
+  grid-template-columns: 1fr 260px;
+  gap: 14px;
+}
+
+/* Summary card */
+.sum-card { padding: 20px; }
+.sum-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.sum-item { }
+.sum-num  { font-size: 28px; font-weight: 600; color: var(--text); font-family: var(--mono); line-height: 1; }
+.sum-lbl  { font-size: 11px; color: var(--sub); margin-top: 3px; text-transform: uppercase; letter-spacing: .5px; font-weight: 500; }
+.sum-div  { height: 1px; background: var(--border); margin: 16px 0; }
+.sum-note { font-size: 12px; color: var(--sub); line-height: 1.7; }
+.sum-note b { color: var(--text); font-weight: 600; }
 
 /* Statusbar */
-.sb { border-top: 1px solid var(--border); padding: 8px 24px; display: flex; gap: 28px; font-size: 9px; color: var(--dim); letter-spacing: 1px; background: var(--bg2); }
-.sb b { color: var(--text); font-weight: 400; }
-.sb-r { margin-left: auto; }
+.statusbar {
+  margin-top: 20px;
+  display: flex; align-items: center; gap: 6px;
+  flex-wrap: wrap;
+}
+.sb-chip {
+  display: flex; align-items: center; gap: 6px;
+  padding: 6px 12px; border-radius: 8px;
+  background: var(--surface); border: 1px solid var(--border);
+  font-size: 12px; color: var(--sub);
+}
+.sb-chip b { color: var(--text); font-weight: 600; font-family: var(--mono); }
+.sb-chip-r { margin-left: auto; }
 </style>
 </head>
 <body>
 
-<header>
-  <div class="logo">BTC<span>BOT</span></div>
-  <div class="hdr-right">
-    <span id="hdr-time">—</span>
-    <span><span class="live-dot"></span>CANLI</span>
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-mark">₿</div>
+    <div class="logo-name">BTC Bot</div>
+    <div class="logo-sub">Polymarket Monitor</div>
   </div>
-</header>
 
-<div class="layout">
+  <nav class="sidebar-nav">
+    <div class="nav-label">Genel</div>
+    <div class="nav-item active">
+      <span class="icon">◉</span> Dashboard
+    </div>
+    <div class="nav-item">
+      <span class="icon">◎</span> Radar
+      <span class="nav-badge" id="nav-radar">0</span>
+    </div>
+    <div class="nav-item">
+      <span class="icon">◈</span> Fırsatlar
+      <span class="nav-badge green" id="nav-opps">0</span>
+    </div>
+    <div class="nav-label" style="margin-top:12px">Sistem</div>
+    <div class="nav-item">
+      <span class="icon">◧</span> Kalibrasyon
+    </div>
+    <div class="nav-item">
+      <span class="icon">◦</span> Ayarlar
+    </div>
+  </nav>
 
-  <!-- BTC -->
-  <div class="cell" style="grid-column:1;grid-row:1">
-    <div class="lbl">BTC / USDT</div>
-    <div class="price-big" id="p-price">—</div>
-    <div class="price-row">
-      <span class="price-chg" id="p-chg">—</span>
-      <span class="price-hl"  id="p-hl"></span>
-      <span class="price-src" id="p-src">—</span>
+  <div class="sidebar-footer">
+    <div class="status-dot">
+      <div class="dot"></div>
+      <span>Bot çalışıyor</span>
+    </div>
+    <div style="font-size:11px;color:var(--dim);margin-top:4px" id="sb-lastupd">—</div>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<main class="main">
+
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <div class="topbar-left">
+      <h1>Dashboard</h1>
+      <p id="topbar-date">Bugün yükleniyor...</p>
+    </div>
+    <div class="topbar-right">
+      <div class="time-chip">
+        <span class="dot" style="width:6px;height:6px"></span>
+        <span id="top-time">—</span>
+      </div>
+      <button class="refresh-btn" onclick="fetchData()">↻ Yenile</button>
     </div>
   </div>
 
-  <!-- TARAMA -->
-  <div class="cell" style="grid-column:2;grid-row:1">
-    <div class="lbl">TOPLAM TARAMA</div>
-    <div class="stat-big" id="s-scans">—</div>
-    <div class="stat-sub" id="s-skips">—</div>
-  </div>
-
-  <!-- FIRSAT -->
-  <div class="cell" style="grid-column:3;grid-row:1">
-    <div class="lbl">BULUNAN FIRSAT</div>
-    <div class="stat-big" id="s-opps">—</div>
-    <div class="stat-sub">toplam sinyal</div>
-  </div>
-
-  <!-- DURUM -->
-  <div class="cell cell-status">
-    <div class="lbl">SİSTEM</div>
-    <div class="srow"><span class="skey">BOT</span><span class="sval">ÇALIŞIYOR</span></div>
-    <div class="srow"><span class="skey">KAYNAK</span><span class="sval" id="st-src">—</span></div>
-    <div class="srow"><span class="skey">TARAMA</span><span class="sval">20s</span></div>
-    <div class="srow"><span class="skey">KALİBRASYON</span><span class="sval">30 TARAMA</span></div>
-    <div class="srow"><span class="skey">DRY RUN</span><span class="sval">AÇIK</span></div>
-    <div class="srow"><span class="skey">EŞİK ARALIK</span><span class="sval" id="st-range">20 / 60</span></div>
-  </div>
-
-  <!-- GRAFİK -->
-  <div class="cell cell-chart">
-    <canvas id="chart"></canvas>
-  </div>
-
-  <!-- EŞİK -->
-  <div class="cell" style="grid-column:1;grid-row:3">
-    <div class="lbl">AKTİF EŞİK</div>
-    <span class="thresh-num" id="th-val">—</span>
-    <span class="thresh-unit"> / 100</span>
-    <div class="bar-track"><div class="bar-fill" id="th-bar" style="width:38%"></div></div>
-    <div class="bar-labels">
-      <span id="th-min">20 — agresif</span>
-      <span id="th-max">60 — muhafazakâr</span>
+  <!-- STATS ROW -->
+  <div class="stats-row">
+    <div class="card stat-card">
+      <div class="stat-card-top">
+        <div class="stat-card-label">BTC Fiyatı</div>
+        <div class="stat-icon blue">₿</div>
+      </div>
+      <div class="stat-num" id="s-price">—</div>
+      <span class="stat-change" id="s-chg">—</span>
     </div>
-    <div class="thresh-note" id="th-note">Her 30 taramada otomatik ayarlanır</div>
-  </div>
-
-  <!-- KALİBRASYON -->
-  <div class="cell" style="grid-column:2/4;grid-row:3">
-    <div class="lbl">KALİBRASYON ETKENLERİ</div>
-    <div class="crow">
-      <div class="cname">VOLATİLİTE</div>
-      <div class="ctrack"><div class="cfill lo" id="cf-vol" style="width:3%"></div></div>
-      <div class="cval" id="cv-vol">—</div>
+    <div class="card stat-card">
+      <div class="stat-card-top">
+        <div class="stat-card-label">Toplam Tarama</div>
+        <div class="stat-icon green">⟳</div>
+      </div>
+      <div class="stat-num" id="s-scans">—</div>
+      <span class="stat-change neu" id="s-skips">— atlama</span>
     </div>
-    <div class="crow">
-      <div class="cname">FIRSAT KALİTESİ</div>
-      <div class="ctrack"><div class="cfill lo" id="cf-qual" style="width:50%"></div></div>
-      <div class="cval" id="cv-qual">Veri yok</div>
+    <div class="card stat-card">
+      <div class="stat-card-top">
+        <div class="stat-card-label">Bulunan Fırsat</div>
+        <div class="stat-icon yellow">◈</div>
+      </div>
+      <div class="stat-num" id="s-opps">—</div>
+      <span class="stat-change neu">Toplam sinyal</span>
     </div>
-    <div class="crow">
-      <div class="cname">SPREAD</div>
-      <div class="ctrack"><div class="cfill lo" id="cf-spread" style="width:3%"></div></div>
-      <div class="cval" id="cv-spread">Fırsat yok</div>
-    </div>
-    <div class="crow">
-      <div class="cname">ACİL PİYASA</div>
-      <div class="ctrack"><div class="cfill lo" id="cf-urgent" style="width:3%"></div></div>
-      <div class="cval" id="cv-urgent">Yok</div>
-    </div>
-    <div class="crow">
-      <div class="cname">PİYASA TAVANI</div>
-      <div class="ctrack"><div class="cfill lo" id="cf-ceil" style="width:3%"></div></div>
-      <div class="cval" id="cv-ceil">—</div>
-    </div>
-    <div class="calib-footer">
-      <div>SON DEĞİŞİM: <span id="cf-last">İzleniyor</span></div>
-      <div>SONRAKİ: <span id="cf-next">—</span></div>
+    <div class="card stat-card">
+      <div class="stat-card-top">
+        <div class="stat-card-label">Aktif Eşik</div>
+        <div class="stat-icon red">⊙</div>
+      </div>
+      <div class="stat-num" id="s-thresh">—</div>
+      <span class="stat-change neu">/ 100 puan</span>
     </div>
   </div>
 
-  <!-- ÖZET -->
-  <div class="cell cell-sum" style="grid-row:3/6">
-    <div class="lbl">24 SAAT</div>
-    <div class="sumb"><div class="sumn" id="sm-scans">—</div><div class="suml">TARAMA</div></div>
-    <div class="sumb"><div class="sumn" id="sm-skips">—</div><div class="suml">ATLAMA</div></div>
-    <div class="sumb"><div class="sumn" id="sm-opps">—</div><div class="suml">FIRSAT</div></div>
-    <div class="sdiv"></div>
-    <div class="sumb"><div class="sumn" id="sm-thresh">—</div><div class="suml">AKTİF EŞİK</div></div>
-    <div class="sumb"><div class="sumn" id="sm-ceil">—</div><div class="suml">PİYASA TAVANI</div></div>
-    <div class="snext" id="sm-next">—</div>
+  <!-- MID ROW -->
+  <div class="mid-row">
+
+    <!-- Chart -->
+    <div class="card chart-card">
+      <div class="chart-header">
+        <div>
+          <div class="chart-title">BTC / USDT — Fiyat Grafiği</div>
+          <div class="chart-sub" id="chart-src">Kaynak: —</div>
+        </div>
+        <div style="text-align:right">
+          <div class="chart-price" id="chart-price">—</div>
+          <div style="font-size:12px;color:var(--sub)" id="chart-hl"></div>
+        </div>
+      </div>
+      <div class="chart-wrap">
+        <canvas id="chart"></canvas>
+      </div>
+    </div>
+
+    <!-- Threshold -->
+    <div class="card thresh-card">
+      <div style="font-size:12px;font-weight:600;color:var(--sub);margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px">Aktif Skor Eşiği</div>
+      <div>
+        <span class="thresh-big" id="th-val">—</span>
+        <span class="thresh-unit"> / 100</span>
+      </div>
+      <div class="thresh-track">
+        <div class="thresh-fill" id="th-bar" style="width:38%"></div>
+      </div>
+      <div class="thresh-row">
+        <span id="th-min">20 — agresif</span>
+        <span id="th-max">60 — muhafazakâr</span>
+      </div>
+
+      <div style="font-size:12px;font-weight:600;color:var(--sub);margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px">Kalibrasyon</div>
+      <div class="calib-rows">
+        <div class="crow">
+          <div class="cname">Volatilite</div>
+          <div class="ctrack"><div class="cfill lo" id="cf-vol" style="width:3%"></div></div>
+          <div class="cval" id="cv-vol">—</div>
+        </div>
+        <div class="crow">
+          <div class="cname">Fırsat Kalitesi</div>
+          <div class="ctrack"><div class="cfill mid" id="cf-qual" style="width:50%"></div></div>
+          <div class="cval" id="cv-qual">Veri yok</div>
+        </div>
+        <div class="crow">
+          <div class="cname">Spread</div>
+          <div class="ctrack"><div class="cfill lo" id="cf-spread" style="width:3%"></div></div>
+          <div class="cval" id="cv-spread">—</div>
+        </div>
+        <div class="crow">
+          <div class="cname">Acil Piyasa</div>
+          <div class="ctrack"><div class="cfill lo" id="cf-urgent" style="width:3%"></div></div>
+          <div class="cval" id="cv-urgent">Yok</div>
+        </div>
+        <div class="crow">
+          <div class="cname">Piyasa Tavanı</div>
+          <div class="ctrack"><div class="cfill lo" id="cf-ceil" style="width:3%"></div></div>
+          <div class="cval" id="cv-ceil">—</div>
+        </div>
+      </div>
+      <div style="margin-top:12px;font-size:11px;color:var(--sub)">
+        Son değişim: <b style="color:var(--text)" id="cf-last">İzleniyor</b><br>
+        Sonraki: <b style="color:var(--text)" id="cf-next">—</b>
+      </div>
+    </div>
   </div>
 
   <!-- RADAR -->
-  <div class="cell cell-full" style="grid-row:4">
+  <div class="card radar-card">
     <div class="panel-head">
-      <div class="panel-head-l">RADAR — EŞİK ALTI PİYASALAR</div>
-      <div class="panel-head-r">
-        TAVAN: <span id="rd-ceil">—</span>
-        EŞİK: <span id="rd-thresh">—</span>
-        FARK: <span id="rd-gap">—</span>
+      <div class="panel-title">◎ Radar — Eşik Altı Piyasalar</div>
+      <div class="panel-meta">
+        <span>Tavan: <b id="rd-ceil">—</b></span>
+        <span>Eşik: <b id="rd-thresh">—</b></span>
+        <span>Fark: <b id="rd-gap">—</b></span>
       </div>
     </div>
-    <div id="radar-body"><div class="empty">Tarama yapılıyor...</div></div>
-  </div>
-
-  <!-- FIRSATLAR -->
-  <div class="cell cell-full" style="grid-row:5">
-    <div class="panel-head">
-      <div class="panel-head-l">FIRSAT LİSTESİ</div>
-      <div class="panel-head-r">SKOR SIRALI &nbsp; TOPLAM: <span id="opp-total">0</span></div>
+    <div id="radar-body">
+      <div class="empty"><div class="empty-icon">◎</div>Tarama yapılıyor...</div>
     </div>
-    <div id="opp-body"><div class="empty">HENÜZ FIRSAT BULUNAMADI</div></div>
   </div>
 
-</div>
+  <!-- BOTTOM ROW -->
+  <div class="bottom-row">
 
-<div class="sb">
-  <div>TARAMA: <b id="sb-time">—</b></div>
-  <div>TOPLAM: <b id="sb-scans">—</b></div>
-  <div>ATLAMA: <b id="sb-skips">—</b></div>
-  <div>FIRSAT: <b id="sb-opps">—</b></div>
-  <div>EŞİK: <b id="sb-thresh">—</b></div>
-  <div class="sb-r">30s YENİLENME</div>
-</div>
+    <!-- Opportunities -->
+    <div class="card" style="overflow:hidden">
+      <div class="panel-head">
+        <div class="panel-title">◈ Fırsat Listesi</div>
+        <div class="panel-meta">
+          Skor sıralı &nbsp;·&nbsp; Toplam: <b id="opp-total">0</b>
+        </div>
+      </div>
+      <div id="opp-body">
+        <div class="empty"><div class="empty-icon">◈</div>Henüz fırsat bulunamadı</div>
+      </div>
+    </div>
+
+    <!-- Summary -->
+    <div class="card sum-card">
+      <div style="font-size:12px;font-weight:600;color:var(--sub);margin-bottom:14px;text-transform:uppercase;letter-spacing:.5px">24 Saat Özeti</div>
+      <div class="sum-grid">
+        <div class="sum-item">
+          <div class="sum-num" id="sm-scans">—</div>
+          <div class="sum-lbl">Tarama</div>
+        </div>
+        <div class="sum-item">
+          <div class="sum-num" id="sm-skips">—</div>
+          <div class="sum-lbl">Atlama</div>
+        </div>
+        <div class="sum-item">
+          <div class="sum-num" id="sm-opps">—</div>
+          <div class="sum-lbl">Fırsat</div>
+        </div>
+        <div class="sum-item">
+          <div class="sum-num" id="sm-ceil">—</div>
+          <div class="sum-lbl">Piyasa Tavanı</div>
+        </div>
+      </div>
+      <div class="sum-div"></div>
+      <div class="sum-note" id="sm-note">—</div>
+    </div>
+
+  </div>
+
+  <!-- STATUSBAR -->
+  <div class="statusbar">
+    <div class="sb-chip">Son Tarama: <b id="sbt">—</b></div>
+    <div class="sb-chip">Tarama: <b id="sb-scans">—</b></div>
+    <div class="sb-chip">Atlama: <b id="sb-skips">—</b></div>
+    <div class="sb-chip">Fırsat: <b id="sb-opps">—</b></div>
+    <div class="sb-chip">Eşik: <b id="sb-thresh">—</b></div>
+    <div class="sb-chip sb-chip-r" style="margin-left:auto">30s yenileme</div>
+  </div>
+
+</main>
 
 <script>
+// ── CONFIG ──
 const BTC_BIN_ID  = '69b2ca72aa77b81da9dbbb81';
 const JSONBIN_KEY = '$2a$10$.quh6XoPJ4MjL.ls.ejOxuw0ZtOxjqFHe7Ca8gHtiOm79anzFshT2';
 const REFRESH_MS  = 30000;
 
-// Chart
+// ── CHART ──
 const canvas = document.getElementById('chart');
 const ctx    = canvas.getContext('2d');
 let chartData = [], lastPrice = 0;
@@ -306,7 +555,7 @@ function initChart(base) {
   chartData = [];
   let p = base * 1.006;
   for (let i = 0; i < 180; i++) {
-    p += -0.00003*p + (Math.random()-.5)*base*0.0006;
+    p += -0.00003*p + (Math.random()-.5)*base*.0006;
     p = Math.max(base*.97, Math.min(base*1.02, p));
     chartData.push(p);
   }
@@ -315,61 +564,61 @@ function initChart(base) {
 
 function drawChart() {
   const w = canvas.offsetWidth, h = canvas.offsetHeight;
-  if (!w || !h) return;
-  canvas.width = w * devicePixelRatio;
-  canvas.height = h * devicePixelRatio;
+  if (!w||!h) return;
+  canvas.width = w*devicePixelRatio; canvas.height = h*devicePixelRatio;
   ctx.scale(devicePixelRatio, devicePixelRatio);
   if (chartData.length < 2) return;
 
   const mn = Math.min(...chartData)*.9995, mx = Math.max(...chartData)*1.0005;
-  const rng = mx - mn, pt = 6, pb = 6;
+  const rng = mx-mn, pt=8, pb=8;
   const x = i => (i/(chartData.length-1))*w;
   const y = v => pt + (1-(v-mn)/rng)*(h-pt-pb);
 
-  // grid
-  ctx.strokeStyle = 'rgba(255,255,255,0.04)'; ctx.lineWidth = 1;
+  // Grid
+  ctx.strokeStyle = 'rgba(0,0,0,0.04)'; ctx.lineWidth = 1;
   [1,2,3].forEach(i => {
-    const yy = pt + (i/4)*(h-pt-pb);
+    const yy = pt+(i/4)*(h-pt-pb);
     ctx.beginPath(); ctx.moveTo(0,yy); ctx.lineTo(w,yy); ctx.stroke();
   });
 
-  // fill
+  // Fill
   const g = ctx.createLinearGradient(0,pt,0,h);
-  g.addColorStop(0,'rgba(255,255,255,0.07)');
-  g.addColorStop(1,'rgba(255,255,255,0)');
+  g.addColorStop(0,'rgba(37,99,235,0.12)');
+  g.addColorStop(1,'rgba(37,99,235,0)');
   ctx.beginPath(); ctx.moveTo(x(0),y(chartData[0]));
   chartData.forEach((v,i) => ctx.lineTo(x(i),y(v)));
   ctx.lineTo(w,h); ctx.lineTo(0,h); ctx.closePath();
   ctx.fillStyle = g; ctx.fill();
 
-  // line
+  // Line
   ctx.beginPath(); ctx.moveTo(x(0),y(chartData[0]));
   chartData.forEach((v,i) => ctx.lineTo(x(i),y(v)));
-  ctx.strokeStyle = 'rgba(255,255,255,0.65)'; ctx.lineWidth = 1.2; ctx.stroke();
+  ctx.strokeStyle = '#2563eb'; ctx.lineWidth = 2; ctx.stroke();
 
-  // dot
-  const lx = x(179), ly = y(chartData[179]);
-  ctx.beginPath(); ctx.arc(lx,ly,2.5,0,Math.PI*2);
-  ctx.fillStyle = '#fff'; ctx.fill();
+  // Dot
+  const lx=x(179), ly=y(chartData[179]);
+  ctx.beginPath(); ctx.arc(lx,ly,4,0,Math.PI*2);
+  ctx.fillStyle='#2563eb'; ctx.fill();
+  ctx.beginPath(); ctx.arc(lx,ly,7,0,Math.PI*2);
+  ctx.fillStyle='rgba(37,99,235,0.2)'; ctx.fill();
 }
 
 function tickChart(p) {
   if (!chartData.length) { initChart(p); return; }
   chartData.shift();
-  chartData.push(p + (Math.random()-.5)*p*0.0001);
+  chartData.push(p+(Math.random()-.5)*p*.0001);
   drawChart();
 }
 
+// ── FETCH ──
 async function fetchData() {
-  if (!BTC_BIN_ID || !JSONBIN_KEY) {
-    $('hdr-time', 'BIN ID / KEY GİRİLMEDİ'); return;
-  }
+  if (!BTC_BIN_ID||!JSONBIN_KEY) { $('top-time','BIN ID / KEY GİRİLMEDİ'); return; }
   try {
     const r = await fetch(`https://api.jsonbin.io/v3/b/${BTC_BIN_ID}/latest`,
-      { headers: { 'X-Master-Key': JSONBIN_KEY } });
+      {headers:{'X-Master-Key':JSONBIN_KEY}});
     if (!r.ok) throw new Error(r.status);
     update((await r.json()).record);
-  } catch(e) { $('hdr-time','HATA: '+e.message); }
+  } catch(e) { $('top-time','Hata: '+e.message); }
 }
 
 let prevThresh = null;
@@ -382,136 +631,166 @@ function update(d) {
   const scans  = d.total_scans || 0;
   const skips  = d.total_skips || 0;
   const thresh = d.active_threshold || 35;
-  const opps   = (d.opportunities || []).length;
+  const opps   = (d.opportunities||[]).length;
   const ceil   = d.market_ceiling || null;
   const upd    = d.last_update || '';
   const c      = d.calib || {};
+  const now    = new Date();
 
-  $('hdr-time', upd ? upd.slice(11,19)+' UTC' : '—');
+  // Topbar
+  $('topbar-date', now.toLocaleDateString('tr-TR',{weekday:'long',day:'numeric',month:'long',year:'numeric'}));
+  $('top-time', upd ? upd.slice(11,19)+' UTC' : now.toTimeString().slice(0,8));
+  $('sb-lastupd', upd ? 'Son: '+upd.slice(11,19)+' UTC' : '—');
 
-  // Price
+  // Stats
   if (price > 0) {
-    $('p-price', '$'+Math.round(price).toLocaleString());
-    const el = document.getElementById('p-chg');
-    el.textContent = (chg>=0?'▲ +':'▼ ')+chg.toFixed(2)+'%';
-    el.className = 'price-chg '+(chg>=0?'up':'dn');
-    $('p-src', src);
-    if (d.btc_high_24h && d.btc_low_24h)
-      $('p-hl','H $'+Math.round(d.btc_high_24h).toLocaleString()+'  L $'+Math.round(d.btc_low_24h).toLocaleString());
+    $('s-price', '$'+Math.round(price).toLocaleString());
+    $('chart-price', '$'+Math.round(price).toLocaleString());
+    const chgEl = document.getElementById('s-chg');
+    chgEl.textContent = (chg>=0?'▲ +':'▼ ')+chg.toFixed(2)+'%';
+    chgEl.className = 'stat-change '+(chg>=0?'up':'dn');
+    $('chart-src', 'Kaynak: '+src);
+    if (d.btc_high_24h&&d.btc_low_24h)
+      $('chart-hl','H $'+Math.round(d.btc_high_24h).toLocaleString()+'  ·  L $'+Math.round(d.btc_low_24h).toLocaleString());
     if (!lastPrice) initChart(price);
-    lastPrice = price;
-    tickChart(price);
+    lastPrice = price; tickChart(price);
   }
 
-  $('s-scans', scans);
+  $('s-scans', scans.toLocaleString());
   $('s-skips', skips+' atlama');
-  $('s-opps',  d.total_opportunities || opps);
-  $('st-src',  src);
-  $('st-range', (d.threshold_min||20)+' / '+(d.threshold_max||60));
+  $('s-opps',  d.total_opportunities||opps);
+  $('s-thresh', typeof thresh==='number'?thresh.toFixed(1):thresh);
 
-  // Threshold bar
-  const tMin = d.threshold_min||20, tMax = d.threshold_max||60;
-  $('th-val', typeof thresh==='number' ? thresh.toFixed(1) : thresh);
-  document.getElementById('th-bar').style.width = ((thresh-tMin)/(tMax-tMin)*100)+'%';
-  $('th-min', tMin+' — agresif');
-  $('th-max', tMax+' — muhafazakâr');
+  // Threshold
+  const tMin=d.threshold_min||20, tMax=d.threshold_max||60;
+  $('th-val', typeof thresh==='number'?thresh.toFixed(1):thresh);
+  document.getElementById('th-bar').style.width=((thresh-tMin)/(tMax-tMin)*100)+'%';
+  $('th-min', tMin+' — agresif'); $('th-max', tMax+' — muhafazakâr');
 
   // Calib
-  const move    = d.btc_move_1h || c.avg_volatility || 0;
-  const score   = c.avg_score   || 0;
-  const spread  = c.avg_spread  || 0;
-  const urgent  = c.avg_urgent  || 0;
-  const samples = c.vol_samples || 0;
+  const move   = d.btc_move_1h||c.avg_volatility||0;
+  const score  = c.avg_score||0;
+  const spread = c.avg_spread||0;
+  const urgent = c.avg_urgent||0;
+  const samples= c.vol_samples||0;
 
-  setBar('vol',    Math.max(move/2*100,3),    move<0.01?'Veri toplanıyor':move.toFixed(3)+'%');
-  setBar('qual',   score,                      score<1?'Veri yok':score.toFixed(0)+'/100');
-  setBar('spread', Math.min(spread/5*100,100), spread<0.001?'Fırsat yok':spread.toFixed(2)+'%');
-  setBar('urgent', Math.min(urgent/3*100,100), urgent<0.1?'Yok':urgent.toFixed(1)+' adet');
-  if (ceil) setBar('ceil', Math.min(ceil,100), ceil.toFixed(1)+'/100');
+  setBar('vol',    Math.max(move/2*100,2),     move<.01?'Veri yok':move.toFixed(3)+'%', move>1.5?'hi':move<.3?'lo':'mid');
+  setBar('qual',   score,                       score<1?'Veri yok':score.toFixed(0)+'/100', score>60?'hi':score<35?'lo':'mid');
+  setBar('spread', Math.min(spread/5*100,100),  spread<.001?'—':spread.toFixed(2)+'%', spread>3?'lo':'mid');
+  setBar('urgent', Math.min(urgent/3*100,100),  urgent<.1?'Yok':urgent.toFixed(1)+' adet', urgent>1?'hi':'lo');
+  if (ceil) setBar('ceil', Math.min(ceil,100), ceil.toFixed(1)+'/100', 'mid');
 
-  if (prevThresh !== null && prevThresh !== thresh) {
-    const d2 = (thresh-prevThresh).toFixed(1);
-    $('cf-last', prevThresh.toFixed(1)+' → '+thresh.toFixed(1)+' ('+(d2>0?'+':'')+d2+')');
+  if (prevThresh!==null && prevThresh!==thresh) {
+    const diff=(thresh-prevThresh).toFixed(1);
+    $('cf-last', prevThresh.toFixed(1)+' → '+thresh.toFixed(1)+' ('+(diff>0?'+':'')+diff+')');
   }
   prevThresh = thresh;
-
   const next = 30-(samples%30)||30;
-  $('cf-next', next+' tarama');
-  $('sm-next', 'Sonraki kalibrasyon: '+next+' tarama');
+  $('cf-next', next+' tarama sonra');
+
+  // Nav badges
+  $('nav-radar', (d.radar||[]).length);
+  $('nav-opps',  d.total_opportunities||opps);
 
   // Radar
-  $('rd-ceil',   ceil ? ceil.toFixed(1)+'/100' : '—');
-  $('rd-thresh', thresh ? thresh.toFixed(1)+'/100' : '—');
-  $('rd-gap',    ceil && thresh ? (thresh-ceil).toFixed(1)+' puan' : '—');
+  $('rd-ceil',   ceil?ceil.toFixed(1)+'/100':'—');
+  $('rd-thresh', thresh?thresh.toFixed(1)+'/100':'—');
+  $('rd-gap',    ceil&&thresh?(thresh-ceil).toFixed(1)+' puan':'—');
   renderRadar(d.radar||[], ceil, thresh);
 
   // Opps
   renderOpps(d.opportunities||[]);
 
   // Summary
-  $('sm-scans',  scans);
-  $('sm-skips',  skips);
-  $('sm-opps',   d.total_opportunities||opps);
-  $('sm-thresh', typeof thresh==='number'?thresh.toFixed(1):thresh);
-  $('sm-ceil',   ceil?ceil.toFixed(1):'—');
+  $('sm-scans', scans.toLocaleString());
+  $('sm-skips', skips);
+  $('sm-opps',  d.total_opportunities||opps);
+  $('sm-ceil',  ceil?ceil.toFixed(1):'—');
+  $('sm-note',  `Sonraki kalibrasyon: ${next} tarama\nEşik aralığı: ${tMin} – ${tMax}`);
 
-  $('sb-time',   upd?upd.slice(11,19)+' UTC':'—');
+  // Statusbar
+  $('sbt',       upd?upd.slice(11,19)+' UTC':'—');
   $('sb-scans',  scans);
   $('sb-skips',  skips);
   $('sb-opps',   opps);
   $('sb-thresh', thresh);
 }
 
-function setBar(id, pct, val) {
-  const f = document.getElementById('cf-'+id);
-  const v = document.getElementById('cv-'+id);
-  if (f) { f.style.width=Math.max(pct,2)+'%'; f.className='cfill'+(pct<10?' lo':''); }
-  if (v) v.textContent = val;
+function setBar(id, pct, val, cls) {
+  const f=document.getElementById('cf-'+id);
+  const v=document.getElementById('cv-'+id);
+  if (f) { f.style.width=Math.max(pct,2)+'%'; f.className='cfill '+(cls||'mid'); }
+  if (v) v.textContent=val;
 }
 
 function renderRadar(cands, ceil, thresh) {
-  const body = document.getElementById('radar-body');
-  if (!cands.length) { body.innerHTML='<div class="empty">Tarama yapılıyor...</div>'; return; }
-  const rows = cands.map(c => {
+  const body=document.getElementById('radar-body');
+  if (!cands.length) {
+    body.innerHTML='<div class="empty"><div class="empty-icon">◎</div>Tarama yapılıyor...</div>';
+    return;
+  }
+  const rows=cands.map(c => {
     const g   = thresh-c.score;
     const pct = Math.min(c.score,100);
     const es  = c.edge_pct>0?'+':'';
+    const ecls= c.edge_pct>0?'edge-pos':'edge-neg';
+    const dir = c.direction==='above'?'<span class="dir-up">↑ Üstü</span>':'<span class="dir-dn">↓ Altı</span>';
+    const gcls= g<=0?'gap-pass':g<=5?'gap-close':g<=12?'gap-mid':'gap-far';
+    const gtxt= g<=0?'✓ Geçti':g.toFixed(0)+' puan eksik';
+    const fcls= pct>=60?'hi':pct<30?'lo':'';
     return `<tr>
-      <td class="tq">${c.direction==='above'?'↑':'↓'} ${c.question}</td>
-      <td>$${Number(c.target||0).toLocaleString()}</td>
-      <td><div class="bwrap"><div class="bbg"><div class="bfill ${pct<30?'lo':''}" style="width:${pct}%"></div></div><span style="font-size:10px;width:42px;text-align:right">${c.score}/100</span></div></td>
-      <td>${es}${(c.edge_pct||0).toFixed(1)}%</td>
-      <td><span class="gtag ${g<=5?'near':''}">${g<=0?'GEÇTİ':g.toFixed(0)+' EKSİK'}</span></td>
-      <td style="color:var(--dim)">${c.hours_left||0}s</td>
+      <td class="tq">${c.question}<small>$${Number(c.target||0).toLocaleString()} · ${dir}</small></td>
+      <td><div class="bwrap">
+        <div class="bbg"><div class="bfill ${fcls}" style="width:${pct}%"></div></div>
+        <span class="bnum">${c.score}/100</span>
+      </div></td>
+      <td class="${ecls}">${es}${(c.edge_pct||0).toFixed(1)}%</td>
+      <td><span class="badge ${gcls}">${gtxt}</span></td>
+      <td style="color:var(--sub);font-family:var(--mono);font-size:12px">${c.hours_left||0}s</td>
     </tr>`;
   }).join('');
-  body.innerHTML = `<table><thead><tr><th>PİYASA</th><th>HEDEF</th><th>SKOR</th><th>EDGE</th><th>EŞİĞE UZAKLIK</th><th>SÜRE</th></tr></thead><tbody>${rows}</tbody></table>`;
+  body.innerHTML=`<table>
+    <thead><tr><th>Piyasa</th><th>Skor</th><th>Edge</th><th>Eşiğe Uzaklık</th><th>Süre</th></tr></thead>
+    <tbody>${rows}</tbody>
+  </table>`;
 }
 
 function renderOpps(opps) {
   $('opp-total', opps.length);
-  const body = document.getElementById('opp-body');
-  if (!opps.length) { body.innerHTML='<div class="empty">HENÜZ FIRSAT BULUNAMADI</div>'; return; }
-  const rows = [...opps].sort((a,b)=>b.score-a.score).map(o => {
-    const ec = o.edge_pct>0?'ayes':'await';
-    const es = o.edge_pct>0?'+':'';
-    const ac = o.action?.includes('YES')?'ayes':o.action?.includes('NO')?'ano':'await';
-    const ug = o.urgent?'<span class="utag">ACİL</span>':'';
+  const body=document.getElementById('opp-body');
+  if (!opps.length) {
+    body.innerHTML='<div class="empty"><div class="empty-icon">◈</div>Henüz fırsat bulunamadı</div>';
+    return;
+  }
+  const rows=[...opps].sort((a,b)=>b.score-a.score).map(o => {
+    const es  = o.edge_pct>0?'+':'';
+    const ecls= o.edge_pct>0?'edge-pos':'edge-neg';
+    const ac  = o.action?.includes('YES')?'action-yes':o.action?.includes('NO')?'action-no':'action-wait';
+    const dir = o.direction==='above'?'<span class="dir-up">↑ Üstü</span>':'<span class="dir-dn">↓ Altı</span>';
+    const ug  = o.urgent?'<span class="urgent-tag">ACİL</span>':'';
+    const pct = Math.min(o.score,100);
     return `<tr>
-      <td class="tq">${o.question||'—'}${ug}</td>
-      <td>$${Number(o.target||0).toLocaleString()}</td>
-      <td>${o.direction==='above'?'↑':'↓'}</td>
-      <td><div style="font-size:9px;color:var(--dim)">PİY ${o.market_prob||0}%</div><div>${o.expected_prob||0}%</div></td>
-      <td class="${ec}">${es}${(o.edge_pct||0).toFixed(1)}%</td>
-      <td><div class="bwrap"><div class="bbg"><div class="bfill" style="width:${o.score}%"></div></div><span style="font-size:10px;width:50px;text-align:right">${o.score}/100</span></div></td>
+      <td class="tq">${o.question||'—'}${ug}<small>$${Number(o.target||0).toLocaleString()} · ${dir}</small></td>
+      <td style="font-size:12px;font-family:var(--mono)">
+        <div>PİY ${o.market_prob||0}%</div>
+        <div style="color:var(--blue)">MOD ${o.expected_prob||0}%</div>
+      </td>
+      <td class="${ecls}">${es}${(o.edge_pct||0).toFixed(1)}%</td>
+      <td><div class="bwrap">
+        <div class="bbg"><div class="bfill hi" style="width:${pct}%"></div></div>
+        <span class="bnum">${o.score}/100</span>
+      </div></td>
       <td class="${ac}">${o.action||'—'}</td>
-      <td style="color:var(--dim)">${o.hours_left||0}s</td>
+      <td style="color:var(--sub);font-family:var(--mono);font-size:12px">${o.hours_left||0}s</td>
     </tr>`;
   }).join('');
-  body.innerHTML = `<table><thead><tr><th>SORU</th><th>HEDEF</th><th>YÖN</th><th>OLASILIK</th><th>EDGE</th><th>SKOR</th><th>ÖNERİ</th><th>SÜRE</th></tr></thead><tbody>${rows}</tbody></table>`;
+  body.innerHTML=`<table>
+    <thead><tr><th>Soru</th><th>Olasılık</th><th>Edge</th><th>Skor</th><th>Öneri</th><th>Süre</th></tr></thead>
+    <tbody>${rows}</tbody>
+  </table>`;
 }
 
-function $(id, val) { const e=document.getElementById(id); if(e) e.textContent=val; }
+function $(id,val){ const e=document.getElementById(id); if(e) e.textContent=val; }
 
 window.addEventListener('resize', drawChart);
 drawChart();
