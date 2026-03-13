@@ -316,7 +316,7 @@ tr:hover td { background: var(--bg); transition: background .1s; }
   </div>
 
   <nav class="sidebar-nav">
-    <div class="nav-label">Genel</div>
+    <div class="nav-label">Overview</div>
     <div class="nav-item active">
       <span class="icon">◉</span> Dashboard
     </div>
@@ -325,22 +325,22 @@ tr:hover td { background: var(--bg); transition: background .1s; }
       <span class="nav-badge" id="nav-radar">0</span>
     </div>
     <div class="nav-item">
-      <span class="icon">◈</span> Fırsatlar
+      <span class="icon">◈</span> Opportunities
       <span class="nav-badge green" id="nav-opps">0</span>
     </div>
-    <div class="nav-label" style="margin-top:12px">Sistem</div>
+    <div class="nav-label" style="margin-top:12px">System</div>
     <div class="nav-item">
-      <span class="icon">◧</span> Kalibrasyon
+      <span class="icon">◧</span> Calibration
     </div>
     <div class="nav-item">
-      <span class="icon">◦</span> Ayarlar
+      <span class="icon">◦</span> Settings
     </div>
   </nav>
 
   <div class="sidebar-footer">
     <div class="status-dot">
       <div class="dot"></div>
-      <span>Bot çalışıyor</span>
+      <span>Bot running</span>
     </div>
     <div style="font-size:11px;color:var(--dim);margin-top:4px" id="sb-lastupd">—</div>
   </div>
@@ -353,14 +353,14 @@ tr:hover td { background: var(--bg); transition: background .1s; }
   <div class="topbar">
     <div class="topbar-left">
       <h1>Dashboard</h1>
-      <p id="topbar-date">Bugün yükleniyor...</p>
+      <p id="topbar-date">Loading...</p>
     </div>
     <div class="topbar-right">
       <div class="time-chip">
         <span class="dot" style="width:6px;height:6px"></span>
         <span id="top-time">—</span>
       </div>
-      <button class="refresh-btn" onclick="fetchData()">↻ Yenile</button>
+      <button class="refresh-btn" onclick="fetchData()">↻ Refresh</button>
     </div>
   </div>
 
@@ -368,7 +368,7 @@ tr:hover td { background: var(--bg); transition: background .1s; }
   <div class="stats-row">
     <div class="card stat-card">
       <div class="stat-card-top">
-        <div class="stat-card-label">BTC Fiyatı</div>
+        <div class="stat-card-label">BTC Price</div>
         <div class="stat-icon blue">₿</div>
       </div>
       <div class="stat-num" id="s-price">—</div>
@@ -376,7 +376,7 @@ tr:hover td { background: var(--bg); transition: background .1s; }
     </div>
     <div class="card stat-card">
       <div class="stat-card-top">
-        <div class="stat-card-label">Toplam Tarama</div>
+        <div class="stat-card-label">Total Scans</div>
         <div class="stat-icon green">⟳</div>
       </div>
       <div class="stat-num" id="s-scans">—</div>
@@ -384,19 +384,19 @@ tr:hover td { background: var(--bg); transition: background .1s; }
     </div>
     <div class="card stat-card">
       <div class="stat-card-top">
-        <div class="stat-card-label">Bulunan Fırsat</div>
+        <div class="stat-card-label">Signals Found</div>
         <div class="stat-icon yellow">◈</div>
       </div>
       <div class="stat-num" id="s-opps">—</div>
-      <span class="stat-change neu">Toplam sinyal</span>
+      <span class="stat-change neu">Total signals</span>
     </div>
     <div class="card stat-card">
       <div class="stat-card-top">
-        <div class="stat-card-label">Aktif Eşik</div>
+        <div class="stat-card-label">Active Threshold</div>
         <div class="stat-icon red">⊙</div>
       </div>
       <div class="stat-num" id="s-thresh">—</div>
-      <span class="stat-change neu">/ 100 puan</span>
+      <span class="stat-change neu">/ 100 pts</span>
     </div>
   </div>
 
@@ -407,8 +407,8 @@ tr:hover td { background: var(--bg); transition: background .1s; }
     <div class="card chart-card">
       <div class="chart-header">
         <div>
-          <div class="chart-title">BTC / USDT — Fiyat Grafiği</div>
-          <div class="chart-sub" id="chart-src">Kaynak: —</div>
+          <div class="chart-title">BTC / USDT — Price Chart</div>
+          <div class="chart-sub" id="chart-src">Source: —</div>
         </div>
         <div style="text-align:right">
           <div class="chart-price" id="chart-price">—</div>
@@ -422,7 +422,7 @@ tr:hover td { background: var(--bg); transition: background .1s; }
 
     <!-- Threshold -->
     <div class="card thresh-card">
-      <div style="font-size:12px;font-weight:600;color:var(--sub);margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px">Aktif Skor Eşiği</div>
+      <div style="font-size:12px;font-weight:600;color:var(--sub);margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px">Active Score Threshold</div>
       <div>
         <span class="thresh-big" id="th-val">—</span>
         <span class="thresh-unit"> / 100</span>
@@ -431,21 +431,21 @@ tr:hover td { background: var(--bg); transition: background .1s; }
         <div class="thresh-fill" id="th-bar" style="width:38%"></div>
       </div>
       <div class="thresh-row">
-        <span id="th-min">20 — agresif</span>
-        <span id="th-max">60 — muhafazakâr</span>
+        <span id="th-min">20 — aggressive</span>
+        <span id="th-max">60 — conservative</span>
       </div>
 
-      <div style="font-size:12px;font-weight:600;color:var(--sub);margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px">Kalibrasyon</div>
+      <div style="font-size:12px;font-weight:600;color:var(--sub);margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px">Calibration</div>
       <div class="calib-rows">
         <div class="crow">
-          <div class="cname">Volatilite</div>
+          <div class="cname">Volatility</div>
           <div class="ctrack"><div class="cfill lo" id="cf-vol" style="width:3%"></div></div>
           <div class="cval" id="cv-vol">—</div>
         </div>
         <div class="crow">
-          <div class="cname">Fırsat Kalitesi</div>
+          <div class="cname">Signal Quality</div>
           <div class="ctrack"><div class="cfill mid" id="cf-qual" style="width:50%"></div></div>
-          <div class="cval" id="cv-qual">Veri yok</div>
+          <div class="cval" id="cv-qual">No data</div>
         </div>
         <div class="crow">
           <div class="cname">Spread</div>
@@ -453,19 +453,19 @@ tr:hover td { background: var(--bg); transition: background .1s; }
           <div class="cval" id="cv-spread">—</div>
         </div>
         <div class="crow">
-          <div class="cname">Acil Piyasa</div>
+          <div class="cname">Urgent Markets</div>
           <div class="ctrack"><div class="cfill lo" id="cf-urgent" style="width:3%"></div></div>
-          <div class="cval" id="cv-urgent">Yok</div>
+          <div class="cval" id="cv-urgent">None</div>
         </div>
         <div class="crow">
-          <div class="cname">Piyasa Tavanı</div>
+          <div class="cname">Market Ceiling</div>
           <div class="ctrack"><div class="cfill lo" id="cf-ceil" style="width:3%"></div></div>
           <div class="cval" id="cv-ceil">—</div>
         </div>
       </div>
       <div style="margin-top:12px;font-size:11px;color:var(--sub)">
-        Son değişim: <b style="color:var(--text)" id="cf-last">İzleniyor</b><br>
-        Sonraki: <b style="color:var(--text)" id="cf-next">—</b>
+        Last change: <b style="color:var(--text)" id="cf-last">Monitoring</b><br>
+        Next: <b style="color:var(--text)" id="cf-next">—</b>
       </div>
     </div>
   </div>
@@ -473,22 +473,22 @@ tr:hover td { background: var(--bg); transition: background .1s; }
   <!-- RADAR -->
   <div class="card radar-card">
     <div class="panel-head">
-      <div class="panel-title">◎ Radar — Eşik Altı Piyasalar</div>
+      <div class="panel-title">◎ Radar — Below Threshold Markets</div>
       <div class="panel-meta">
-        <span>Tavan: <b id="rd-ceil">—</b></span>
-        <span>Eşik: <b id="rd-thresh">—</b></span>
-        <span>Fark: <b id="rd-gap">—</b></span>
+        <span>Ceiling: <b id="rd-ceil">—</b></span>
+        <span>Threshold: <b id="rd-thresh">—</b></span>
+        <span>Gap: <b id="rd-gap">—</b></span>
       </div>
     </div>
     <div id="radar-body">
-      <div class="empty"><div class="empty-icon">◎</div>Tarama yapılıyor...</div>
+      <div class="empty"><div class="empty-icon">◎</div>Scanning...</div>
     </div>
   </div>
 
   <!-- WIN RATE KARTI -->
   <div class="card" style="margin-bottom:14px;padding:20px">
     <div style="font-size:12px;font-weight:600;color:var(--sub);margin-bottom:14px;text-transform:uppercase;letter-spacing:.5px">
-      Tahmin Performansı
+      Prediction Performance
     </div>
     <div style="display:grid;grid-template-columns:1fr 1fr 200px;gap:24px;align-items:start">
       <div>
@@ -500,35 +500,35 @@ tr:hover td { background: var(--bg); transition: background .1s; }
             <div class="wr-bar-loss" id="wr-bar-loss" style="width:0%"></div>
           </div>
           <div class="wr-bar-labels">
-            <span id="wr-lbl-win">0 doğru</span>
-            <span id="wr-lbl-loss">0 yanlış</span>
+            <span id="wr-lbl-win">0 correct</span>
+            <span id="wr-lbl-loss">0 wrong</span>
           </div>
         </div>
-        <div class="wr-pending">Bekleyen: <b id="wr-pending">—</b> tahmin</div>
+        <div class="wr-pending">WAITyen: <b id="wr-pending">—</b> predictions</div>
       </div>
       <div>
         <div class="wr-grid">
           <div class="wr-item">
             <div class="wr-num win" id="wr-correct">—</div>
-            <div class="wr-lbl">Doğru</div>
+            <div class="wr-lbl">Correct</div>
           </div>
           <div class="wr-item">
             <div class="wr-num loss" id="wr-wrong">—</div>
-            <div class="wr-lbl">Yanlış</div>
+            <div class="wr-lbl">Wrong</div>
           </div>
           <div class="wr-item">
             <div class="wr-num" id="wr-total">—</div>
-            <div class="wr-lbl">Toplam</div>
+            <div class="wr-lbl">Total</div>
           </div>
           <div class="wr-item">
             <div class="wr-num" id="wr-pend2">—</div>
-            <div class="wr-lbl">Bekleyen</div>
+            <div class="wr-lbl">WAITyen</div>
           </div>
         </div>
       </div>
       <div>
-        <div style="font-size:11px;font-weight:600;color:var(--sub);margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px">Son Sonuçlar</div>
-        <div id="wr-recent"><div style="font-size:12px;color:var(--sub)">Henüz sonuç yok</div></div>
+        <div style="font-size:11px;font-weight:600;color:var(--sub);margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px">Recent Results</div>
+        <div id="wr-recent"><div style="font-size:12px;color:var(--sub)">No results yet</div></div>
       </div>
     </div>
   </div>
@@ -539,27 +539,27 @@ tr:hover td { background: var(--bg); transition: background .1s; }
     <!-- Opportunities -->
     <div class="card" style="overflow:hidden">
       <div class="panel-head">
-        <div class="panel-title">◈ Fırsat Listesi</div>
+        <div class="panel-title">◈ Opportunity List</div>
         <div class="panel-meta">
-          Skor sıralı &nbsp;·&nbsp; Toplam: <b id="opp-total">0</b>
+          Score sıralı &nbsp;·&nbsp; Total: <b id="opp-total">0</b>
         </div>
       </div>
       <div id="opp-body">
-        <div class="empty"><div class="empty-icon">◈</div>Henüz fırsat bulunamadı</div>
+        <div class="empty"><div class="empty-icon">◈</div>No opportunities found yet</div>
       </div>
     </div>
 
     <!-- Summary -->
     <div class="card sum-card">
-      <div style="font-size:12px;font-weight:600;color:var(--sub);margin-bottom:14px;text-transform:uppercase;letter-spacing:.5px">24 Saat Özeti</div>
+      <div style="font-size:12px;font-weight:600;color:var(--sub);margin-bottom:14px;text-transform:uppercase;letter-spacing:.5px">24h Summary</div>
       <div class="sum-grid">
         <div class="sum-item">
           <div class="sum-num" id="sm-scans">—</div>
-          <div class="sum-lbl">Tarama</div>
+          <div class="sum-lbl">Scans</div>
         </div>
         <div class="sum-item">
           <div class="sum-num" id="sm-skips">—</div>
-          <div class="sum-lbl">Atlama</div>
+          <div class="sum-lbl">Skipped</div>
         </div>
         <div class="sum-item">
           <div class="sum-num" id="sm-opps">—</div>
@@ -567,7 +567,7 @@ tr:hover td { background: var(--bg); transition: background .1s; }
         </div>
         <div class="sum-item">
           <div class="sum-num" id="sm-ceil">—</div>
-          <div class="sum-lbl">Piyasa Tavanı</div>
+          <div class="sum-lbl">Market Ceiling</div>
         </div>
       </div>
       <div class="sum-div"></div>
@@ -578,12 +578,12 @@ tr:hover td { background: var(--bg); transition: background .1s; }
 
   <!-- STATUSBAR -->
   <div class="statusbar">
-    <div class="sb-chip">Son Tarama: <b id="sbt">—</b></div>
-    <div class="sb-chip">Tarama: <b id="sb-scans">—</b></div>
-    <div class="sb-chip">Atlama: <b id="sb-skips">—</b></div>
-    <div class="sb-chip">Fırsat: <b id="sb-opps">—</b></div>
-    <div class="sb-chip">Eşik: <b id="sb-thresh">—</b></div>
-    <div class="sb-chip sb-chip-r" style="margin-left:auto">30s yenileme</div>
+    <div class="sb-chip">Son Scans: <b id="sbt">—</b></div>
+    <div class="sb-chip">Scans: <b id="sb-scans">—</b></div>
+    <div class="sb-chip">Skipped: <b id="sb-skips">—</b></div>
+    <div class="sb-chip">Signals: <b id="sb-opps">—</b></div>
+    <div class="sb-chip">Threshold: <b id="sb-thresh">—</b></div>
+    <div class="sb-chip sb-chip-r" style="margin-left:auto">30s refresh</div>
   </div>
 
 </main>
@@ -683,8 +683,8 @@ function updateWinRate(ps) {
   if (bw) bw.style.width = winPct + '%';
   if (bl) bl.style.width = lossPct + '%';
 
-  $('wr-lbl-win',  correct + ' doğru');
-  $('wr-lbl-loss', wrong   + ' yanlış');
+  $('wr-lbl-win',  correct + ' correct');
+  $('wr-lbl-loss', wrong   + ' wrong');
   $('wr-correct',  correct);
   $('wr-wrong',    wrong);
   $('wr-total',    total);
@@ -735,7 +735,7 @@ function update(d) {
   // Topbar
   $('topbar-date', now.toLocaleDateString('tr-TR',{weekday:'long',day:'numeric',month:'long',year:'numeric'}));
   $('top-time', upd ? upd.slice(11,19)+' UTC' : now.toTimeString().slice(0,8));
-  $('sb-lastupd', upd ? 'Son: '+upd.slice(11,19)+' UTC' : '—');
+  $('sb-lastupd', upd ? 'Last: '+upd.slice(11,19)+' UTC' : '—');
 
   // Stats
   if (price > 0) {
@@ -744,7 +744,7 @@ function update(d) {
     const chgEl = document.getElementById('s-chg');
     chgEl.textContent = (chg>=0?'▲ +':'▼ ')+chg.toFixed(2)+'%';
     chgEl.className = 'stat-change '+(chg>=0?'up':'dn');
-    $('chart-src', 'Kaynak: '+src);
+    $('chart-src', 'Source: '+src);
     if (d.btc_high_24h&&d.btc_low_24h)
       $('chart-hl','H $'+Math.round(d.btc_high_24h).toLocaleString()+'  ·  L $'+Math.round(d.btc_low_24h).toLocaleString());
     if (!lastPrice) initChart(price);
@@ -752,7 +752,7 @@ function update(d) {
   }
 
   $('s-scans', scans.toLocaleString());
-  $('s-skips', skips+' atlama');
+  $('s-skips', skips+' skipped');
   $('s-opps',  d.total_opportunities||opps);
   $('s-thresh', typeof thresh==='number'?thresh.toFixed(1):thresh);
 
@@ -760,7 +760,7 @@ function update(d) {
   const tMin=d.threshold_min||20, tMax=d.threshold_max||60;
   $('th-val', typeof thresh==='number'?thresh.toFixed(1):thresh);
   document.getElementById('th-bar').style.width=((thresh-tMin)/(tMax-tMin)*100)+'%';
-  $('th-min', tMin+' — agresif'); $('th-max', tMax+' — muhafazakâr');
+  $('th-min', tMin+' — aggressive'); $('th-max', tMax+' — conservative');
 
   // Calib
   const move   = d.btc_move_1h||c.avg_volatility||0;
@@ -769,10 +769,10 @@ function update(d) {
   const urgent = c.avg_urgent||0;
   const samples= c.vol_samples||0;
 
-  setBar('vol',    Math.max(move/2*100,2),     move<.01?'Veri yok':move.toFixed(3)+'%', move>1.5?'hi':move<.3?'lo':'mid');
-  setBar('qual',   score,                       score<1?'Veri yok':score.toFixed(0)+'/100', score>60?'hi':score<35?'lo':'mid');
+  setBar('vol',    Math.max(move/2*100,2),     move<.01?'No data':move.toFixed(3)+'%', move>1.5?'hi':move<.3?'lo':'mid');
+  setBar('qual',   score,                       score<1?'No data':score.toFixed(0)+'/100', score>60?'hi':score<35?'lo':'mid');
   setBar('spread', Math.min(spread/5*100,100),  spread<.001?'—':spread.toFixed(2)+'%', spread>3?'lo':'mid');
-  setBar('urgent', Math.min(urgent/3*100,100),  urgent<.1?'Yok':urgent.toFixed(1)+' adet', urgent>1?'hi':'lo');
+  setBar('urgent', Math.min(urgent/3*100,100),  urgent<.1?'None':urgent.toFixed(1)+' active', urgent>1?'hi':'lo');
   if (ceil) setBar('ceil', Math.min(ceil,100), ceil.toFixed(1)+'/100', 'mid');
 
   if (prevThresh!==null && prevThresh!==thresh) {
@@ -781,7 +781,7 @@ function update(d) {
   }
   prevThresh = thresh;
   const next = 30-(samples%30)||30;
-  $('cf-next', next+' tarama sonra');
+  $('cf-next', next+' scans away');
 
   // Nav badges
   $('nav-radar', (d.radar||[]).length);
@@ -793,7 +793,7 @@ function update(d) {
   // Radar
   $('rd-ceil',   ceil?ceil.toFixed(1)+'/100':'—');
   $('rd-thresh', thresh?thresh.toFixed(1)+'/100':'—');
-  $('rd-gap',    ceil&&thresh?(thresh-ceil).toFixed(1)+' puan':'—');
+  $('rd-gap',    ceil&&thresh?(thresh-ceil).toFixed(1)+' pts':'—');
   renderRadar(d.radar||[], ceil, thresh);
 
   // Opps
@@ -804,7 +804,7 @@ function update(d) {
   $('sm-skips', skips);
   $('sm-opps',  d.total_opportunities||opps);
   $('sm-ceil',  ceil?ceil.toFixed(1):'—');
-  $('sm-note',  `Sonraki kalibrasyon: ${next} tarama\nEşik aralığı: ${tMin} – ${tMax}`);
+  $('sm-note',  `Next calibration: ${next} scans\nThreshold range: ${tMin} – ${tMax}`);
 
   // Statusbar
   $('sbt',       upd?upd.slice(11,19)+' UTC':'—');
@@ -824,7 +824,7 @@ function setBar(id, pct, val, cls) {
 function renderRadar(cands, ceil, thresh) {
   const body=document.getElementById('radar-body');
   if (!cands.length) {
-    body.innerHTML='<div class="empty"><div class="empty-icon">◎</div>Tarama yapılıyor...</div>';
+    body.innerHTML='<div class="empty"><div class="empty-icon">◎</div>Scanning...</div>';
     return;
   }
   const rows=cands.map(c => {
@@ -832,9 +832,9 @@ function renderRadar(cands, ceil, thresh) {
     const pct = Math.min(c.score,100);
     const es  = c.edge_pct>0?'+':'';
     const ecls= c.edge_pct>0?'edge-pos':'edge-neg';
-    const dir = c.direction==='above'?'<span class="dir-up">↑ Üstü</span>':'<span class="dir-dn">↓ Altı</span>';
+    const dir = c.direction==='above'?'<span class="dir-up">↑ Above</span>':'<span class="dir-dn">↓ Below</span>';
     const gcls= g<=0?'gap-pass':g<=5?'gap-close':g<=12?'gap-mid':'gap-far';
-    const gtxt= g<=0?'✓ Geçti':g.toFixed(0)+' puan eksik';
+    const gtxt= g<=0?'✓ Geçti':g.toFixed(0)+' pts away';
     const fcls= pct>=60?'hi':pct<30?'lo':'';
     return `<tr>
       <td class="tq">${c.question}<small>$${Number(c.target||0).toLocaleString()} · ${dir}</small></td>
@@ -848,7 +848,7 @@ function renderRadar(cands, ceil, thresh) {
     </tr>`;
   }).join('');
   body.innerHTML=`<table>
-    <thead><tr><th>Piyasa</th><th>Skor</th><th>Edge</th><th>Eşiğe Uzaklık</th><th>Süre</th></tr></thead>
+    <thead><tr><th>Market</th><th>Score</th><th>Edge</th><th>Distance to Threshold</th><th>Time left</th></tr></thead>
     <tbody>${rows}</tbody>
   </table>`;
 }
@@ -857,15 +857,15 @@ function renderOpps(opps) {
   $('opp-total', opps.length);
   const body=document.getElementById('opp-body');
   if (!opps.length) {
-    body.innerHTML='<div class="empty"><div class="empty-icon">◈</div>Henüz fırsat bulunamadı</div>';
+    body.innerHTML='<div class="empty"><div class="empty-icon">◈</div>No opportunities found yet</div>';
     return;
   }
   const rows=[...opps].sort((a,b)=>b.score-a.score).map(o => {
     const es  = o.edge_pct>0?'+':'';
     const ecls= o.edge_pct>0?'edge-pos':'edge-neg';
     const ac  = o.action?.includes('YES')?'action-yes':o.action?.includes('NO')?'action-no':'action-wait';
-    const dir = o.direction==='above'?'<span class="dir-up">↑ Üstü</span>':'<span class="dir-dn">↓ Altı</span>';
-    const ug  = o.urgent?'<span class="urgent-tag">ACİL</span>':'';
+    const dir = o.direction==='above'?'<span class="dir-up">↑ Above</span>':'<span class="dir-dn">↓ Below</span>';
+    const ug  = o.urgent?'<span class="urgent-tag">URGENT</span>':'';
     const pct = Math.min(o.score,100);
     return `<tr>
       <td class="tq">${o.question||'—'}${ug}<small>$${Number(o.target||0).toLocaleString()} · ${dir}</small></td>
@@ -883,7 +883,7 @@ function renderOpps(opps) {
     </tr>`;
   }).join('');
   body.innerHTML=`<table>
-    <thead><tr><th>Soru</th><th>Olasılık</th><th>Edge</th><th>Skor</th><th>Öneri</th><th>Süre</th></tr></thead>
+    <thead><tr><th>Question</th><th>Probability</th><th>Edge</th><th>Score</th><th>Signal</th><th>Time left</th></tr></thead>
     <tbody>${rows}</tbody>
   </table>`;
 }
