@@ -485,6 +485,54 @@ tr:hover td { background: var(--bg); transition: background .1s; }
     </div>
   </div>
 
+  <!-- WIN RATE KARTI -->
+  <div class="card" style="margin-bottom:14px;padding:20px">
+    <div style="font-size:12px;font-weight:600;color:var(--sub);margin-bottom:14px;text-transform:uppercase;letter-spacing:.5px">
+      Tahmin Performansı
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 200px;gap:24px;align-items:start">
+      <div>
+        <div class="wr-rate" id="wr-rate">—</div>
+        <div class="wr-lbl">Win Rate</div>
+        <div class="wr-bar-wrap">
+          <div class="wr-bar-track">
+            <div class="wr-bar-win"  id="wr-bar-win"  style="width:0%"></div>
+            <div class="wr-bar-loss" id="wr-bar-loss" style="width:0%"></div>
+          </div>
+          <div class="wr-bar-labels">
+            <span id="wr-lbl-win">0 doğru</span>
+            <span id="wr-lbl-loss">0 yanlış</span>
+          </div>
+        </div>
+        <div class="wr-pending">Bekleyen: <b id="wr-pending">—</b> tahmin</div>
+      </div>
+      <div>
+        <div class="wr-grid">
+          <div class="wr-item">
+            <div class="wr-num win" id="wr-correct">—</div>
+            <div class="wr-lbl">Doğru</div>
+          </div>
+          <div class="wr-item">
+            <div class="wr-num loss" id="wr-wrong">—</div>
+            <div class="wr-lbl">Yanlış</div>
+          </div>
+          <div class="wr-item">
+            <div class="wr-num" id="wr-total">—</div>
+            <div class="wr-lbl">Toplam</div>
+          </div>
+          <div class="wr-item">
+            <div class="wr-num" id="wr-pend2">—</div>
+            <div class="wr-lbl">Bekleyen</div>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div style="font-size:11px;font-weight:600;color:var(--sub);margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px">Son Sonuçlar</div>
+        <div id="wr-recent"><div style="font-size:12px;color:var(--sub)">Henüz sonuç yok</div></div>
+      </div>
+    </div>
+  </div>
+
   <!-- BOTTOM ROW -->
   <div class="bottom-row">
 
@@ -610,6 +658,53 @@ function tickChart(p) {
   drawChart();
 }
 
+
+// ── WIN RATE ──────────────────────────────
+function updateWinRate(ps) {
+  if (!ps) return;
+  const total   = ps.total   || 0;
+  const correct = ps.correct || 0;
+  const wrong   = ps.wrong   || 0;
+  const pending = ps.pending || 0;
+  const rate    = ps.win_rate;
+
+  // Rate
+  const rateEl = document.getElementById('wr-rate');
+  if (rateEl) {
+    rateEl.textContent = rate !== null && rate !== undefined ? rate.toFixed(1) + '%' : '—';
+    rateEl.className = 'wr-rate ' + (rate >= 60 ? 'good' : rate >= 40 ? 'neu' : total > 0 ? 'bad' : '');
+  }
+
+  // Bar
+  const winPct  = total > 0 ? (correct / total * 100) : 0;
+  const lossPct = total > 0 ? (wrong   / total * 100) : 0;
+  const bw = document.getElementById('wr-bar-win');
+  const bl = document.getElementById('wr-bar-loss');
+  if (bw) bw.style.width = winPct + '%';
+  if (bl) bl.style.width = lossPct + '%';
+
+  $('wr-lbl-win',  correct + ' doğru');
+  $('wr-lbl-loss', wrong   + ' yanlış');
+  $('wr-correct',  correct);
+  $('wr-wrong',    wrong);
+  $('wr-total',    total);
+  $('wr-pending',  pending);
+  $('wr-pend2',    pending);
+
+  // Son sonuçlar
+  const recentEl = document.getElementById('wr-recent');
+  if (recentEl && ps.recent && ps.recent.length > 0) {
+    recentEl.innerHTML = ps.recent.map(r => `
+      <div class="result-row">
+        <span class="result-icon">${r.correct ? '✅' : '❌'}</span>
+        <span class="result-q">${r.question}</span>
+        <span class="result-edge" style="color:${r.edge_pct>0?'var(--up)':'var(--dn)'}">${r.edge_pct>0?'+':''}${r.edge_pct.toFixed(1)}%</span>
+        <span class="result-date">${(r.closed_at||'').slice(11,16)}</span>
+      </div>
+    `).join('');
+  }
+}
+
 // ── FETCH ──
 async function fetchData() {
   if (!BTC_BIN_ID||!JSONBIN_KEY) { $('top-time','BIN ID / KEY GİRİLMEDİ'); return; }
@@ -691,6 +786,9 @@ function update(d) {
   // Nav badges
   $('nav-radar', (d.radar||[]).length);
   $('nav-opps',  d.total_opportunities||opps);
+
+  // Win Rate
+  updateWinRate(d.prediction_stats);
 
   // Radar
   $('rd-ceil',   ceil?ceil.toFixed(1)+'/100':'—');
