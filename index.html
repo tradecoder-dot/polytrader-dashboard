@@ -1,407 +1,392 @@
 <!DOCTYPE html>
-<html lang="tr">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>BTC Bot — Dashboard</title>
+<title>BTC Bot Monitor</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,300;12..96,400;12..96,500;12..96,600&family=Geist+Mono:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 :root {
-  --bg:       #f5f5f7;
-  --surface:  #ffffff;
-  --border:   #e8e8ec;
-  --border2:  #d8d8de;
-  --text:     #1a1a2e;
-  --sub:      #6b6b80;
-  --dim:      #9999aa;
-  --accent:   #1a1a2e;
-  --up:       #16a34a;
-  --up-bg:    #f0fdf4;
-  --dn:       #dc2626;
-  --dn-bg:    #fef2f2;
-  --warn:     #d97706;
-  --warn-bg:  #fffbeb;
-  --blue:     #2563eb;
-  --blue-bg:  #eff6ff;
-  --mono:     'DM Mono', monospace;
-  --sans:     'DM Sans', sans-serif;
-  --radius:   12px;
-  --shadow:   0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
-  --shadow2:  0 4px 12px rgba(0,0,0,0.08);
+  --bg:       #0d0d0f;
+  --bg2:      #131316;
+  --bg3:      #1a1a1f;
+  --border:   rgba(255,255,255,0.07);
+  --border2:  rgba(255,255,255,0.12);
+  --text:     #e8e8f0;
+  --sub:      #7a7a8c;
+  --dim:      #4a4a5a;
+  --white:    #ffffff;
+  --accent:   #7c6af7;
+  --accent2:  #a78bfa;
+  --green:    #34d399;
+  --red:      #f87171;
+  --yellow:   #fbbf24;
+  --sans:     'Bricolage Grotesque', sans-serif;
+  --mono:     'Geist Mono', monospace;
 }
 
-html, body {
-  background: var(--bg);
-  color: var(--text);
+html { background: var(--bg); }
+body {
   font-family: var(--sans);
-  font-size: 14px;
-  line-height: 1.5;
+  color: var(--text);
   min-height: 100vh;
+  background:
+    radial-gradient(ellipse 80% 50% at 20% -10%, rgba(124,106,247,0.12) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 40% at 80% 110%, rgba(52,211,153,0.06) 0%, transparent 50%),
+    var(--bg);
 }
 
-/* ── SIDEBAR ── */
-.sidebar {
-  position: fixed; left: 0; top: 0; bottom: 0;
-  width: 220px;
-  background: var(--surface);
-  border-right: 1px solid var(--border);
-  display: flex; flex-direction: column;
-  z-index: 100;
-}
-.sidebar-logo {
-  padding: 24px 20px 20px;
-  border-bottom: 1px solid var(--border);
-}
-.logo-mark {
-  display: inline-flex; align-items: center; justify-content: center;
-  width: 36px; height: 36px; border-radius: 10px;
-  background: var(--accent); color: #fff;
-  font-family: var(--mono); font-size: 13px; font-weight: 500;
-  margin-bottom: 10px;
-}
-.logo-name { font-size: 15px; font-weight: 600; color: var(--text); }
-.logo-sub  { font-size: 11px; color: var(--dim); margin-top: 1px; }
-
-.sidebar-nav { padding: 12px 10px; flex: 1; }
-.nav-label { font-size: 10px; font-weight: 500; color: var(--dim); letter-spacing: 1.5px; padding: 8px 10px 6px; text-transform: uppercase; }
-.nav-item {
-  display: flex; align-items: center; gap: 10px;
-  padding: 9px 10px; border-radius: 8px;
-  font-size: 13px; font-weight: 500; color: var(--sub);
-  cursor: pointer; transition: all .15s ease;
-  margin-bottom: 2px;
-}
-.nav-item:hover { background: var(--bg); color: var(--text); }
-.nav-item.active { background: var(--accent); color: #fff; }
-.nav-item .icon { font-size: 15px; width: 20px; text-align: center; }
-.nav-badge {
-  margin-left: auto; font-size: 10px; font-weight: 600;
-  background: var(--blue); color: #fff;
-  padding: 1px 7px; border-radius: 20px;
-}
-.nav-badge.green { background: var(--up); }
-
-.sidebar-footer {
-  padding: 16px 20px;
-  border-top: 1px solid var(--border);
-}
-.status-dot {
-  display: inline-flex; align-items: center; gap: 7px;
-  font-size: 12px; color: var(--sub);
-}
-.dot { width: 7px; height: 7px; border-radius: 50%; background: var(--up); animation: pulse 2s ease-in-out infinite; }
-@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
-
-/* ── MAIN ── */
-.main { margin-left: 220px; padding: 28px 28px 40px; min-height: 100vh; }
-
-/* ── TOPBAR ── */
-.topbar {
+/* ── HEADER ── */
+header {
   display: flex; align-items: center; justify-content: space-between;
-  margin-bottom: 24px;
+  padding: 20px 32px;
+  border-bottom: 1px solid var(--border);
+  backdrop-filter: blur(12px);
+  position: sticky; top: 0; z-index: 100;
+  background: rgba(13,13,15,0.85);
 }
-.topbar-left h1 { font-size: 22px; font-weight: 600; color: var(--text); }
-.topbar-left p  { font-size: 13px; color: var(--sub); margin-top: 2px; }
-.topbar-right { display: flex; align-items: center; gap: 10px; }
+.logo {
+  display: flex; align-items: center; gap: 12px;
+}
+.logo-icon {
+  width: 36px; height: 36px; border-radius: 10px;
+  background: linear-gradient(135deg, #7c6af7, #a78bfa);
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--mono); font-size: 14px; font-weight: 500;
+  color: #fff;
+}
+.logo-text { font-size: 15px; font-weight: 500; color: var(--white); }
+.logo-sub  { font-size: 11px; color: var(--sub); margin-top: 1px; font-family: var(--mono); }
+
+.header-right { display: flex; align-items: center; gap: 16px; }
+.live-pill {
+  display: flex; align-items: center; gap: 7px;
+  padding: 6px 14px; border-radius: 99px;
+  border: 1px solid rgba(52,211,153,0.3);
+  background: rgba(52,211,153,0.06);
+  font-size: 11px; font-family: var(--mono); color: var(--green);
+  letter-spacing: 1px;
+}
+.live-dot {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--green);
+  animation: glow 2s ease-in-out infinite;
+}
+@keyframes glow {
+  0%,100% { box-shadow: 0 0 0 0 rgba(52,211,153,0.6); opacity:1; }
+  50%      { box-shadow: 0 0 0 4px rgba(52,211,153,0); opacity:.7; }
+}
 .time-chip {
-  display: flex; align-items: center; gap: 6px;
-  padding: 7px 14px; border-radius: 8px;
-  background: var(--surface); border: 1px solid var(--border);
-  font-size: 12px; font-family: var(--mono); color: var(--sub);
+  font-size: 12px; font-family: var(--mono);
+  color: var(--sub); letter-spacing: .5px;
 }
 .refresh-btn {
-  padding: 7px 16px; border-radius: 8px;
-  background: var(--accent); color: #fff;
-  font-size: 12px; font-weight: 500; border: none; cursor: pointer;
-  font-family: var(--sans); transition: opacity .15s;
+  padding: 8px 18px; border-radius: 8px;
+  background: rgba(124,106,247,0.15);
+  border: 1px solid rgba(124,106,247,0.3);
+  color: var(--accent2); font-size: 12px; font-family: var(--sans);
+  font-weight: 500; cursor: pointer; transition: all .2s;
 }
-.refresh-btn:hover { opacity: .85; }
+.refresh-btn:hover { background: rgba(124,106,247,0.25); }
 
-/* ── CARDS ── */
+/* ── LAYOUT ── */
+.page { padding: 28px 32px 48px; max-width: 1400px; margin: 0 auto; }
+
+/* ── HERO ROW ── */
+.hero {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
 .card {
-  background: var(--surface);
+  background: var(--bg2);
   border: 1px solid var(--border);
-  border-radius: var(--radius);
-  box-shadow: var(--shadow);
+  border-radius: 16px;
+  transition: border-color .2s;
 }
-.card-pad { padding: 20px; }
+.card:hover { border-color: var(--border2); }
+.card-pad { padding: 22px 24px; }
 
-/* ── TOP STATS ROW ── */
-.stats-row {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 14px;
-  margin-bottom: 20px;
+/* BTC Hero card */
+.card-btc {
+  grid-column: 1 / 3;
+  padding: 28px 32px;
+  background: linear-gradient(135deg, #131316 0%, #1a1a2e 100%);
+  border-color: rgba(124,106,247,0.2);
+  position: relative; overflow: hidden;
 }
-.stat-card { padding: 18px 20px; }
-.stat-card-top { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 10px; }
-.stat-card-label { font-size: 12px; font-weight: 500; color: var(--sub); }
-.stat-icon {
-  width: 34px; height: 34px; border-radius: 9px;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 16px;
+.card-btc::before {
+  content: '';
+  position: absolute; top: -40px; right: -40px;
+  width: 200px; height: 200px; border-radius: 50%;
+  background: radial-gradient(circle, rgba(124,106,247,0.15) 0%, transparent 70%);
+  pointer-events: none;
 }
-.stat-icon.blue   { background: var(--blue-bg);  }
-.stat-icon.green  { background: var(--up-bg);    }
-.stat-icon.yellow { background: var(--warn-bg);  }
-.stat-icon.red    { background: var(--dn-bg);    }
-.stat-num { font-size: 26px; font-weight: 600; color: var(--text); line-height: 1; margin-bottom: 6px; }
-.stat-change {
-  display: inline-flex; align-items: center; gap: 4px;
-  font-size: 12px; font-weight: 500; padding: 2px 8px;
-  border-radius: 6px;
+.btc-label { font-size: 11px; color: var(--sub); letter-spacing: 2px; margin-bottom: 10px; font-family: var(--mono); }
+.btc-price {
+  font-size: 52px; font-weight: 600; color: var(--white);
+  letter-spacing: -2px; line-height: 1;
+  margin-bottom: 12px;
 }
-.stat-change.up  { color: var(--up);   background: var(--up-bg);  }
-.stat-change.dn  { color: var(--dn);   background: var(--dn-bg);  }
-.stat-change.neu { color: var(--warn); background: var(--warn-bg); }
+.btc-meta { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+.btc-badge {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 5px 12px; border-radius: 99px;
+  font-size: 13px; font-weight: 500; font-family: var(--mono);
+}
+.btc-badge.up   { background: rgba(52,211,153,0.12); color: var(--green); border: 1px solid rgba(52,211,153,0.2); }
+.btc-badge.down { background: rgba(248,113,113,0.12); color: var(--red);   border: 1px solid rgba(248,113,113,0.2); }
+.btc-hl { font-size: 11px; color: var(--dim); font-family: var(--mono); }
+.btc-src {
+  margin-left: auto; font-size: 10px; color: var(--dim);
+  border: 1px solid var(--border2); padding: 3px 9px; border-radius: 6px;
+  font-family: var(--mono);
+}
 
-/* ── MID ROW ── */
-.mid-row {
-  display: grid;
-  grid-template-columns: 1fr 320px;
-  gap: 14px;
-  margin-bottom: 20px;
+/* Stat cards */
+.stat-card { padding: 22px 24px; }
+.stat-lbl  { font-size: 11px; color: var(--sub); letter-spacing: 1.5px; margin-bottom: 14px; font-family: var(--mono); }
+.stat-val  { font-size: 36px; font-weight: 600; color: var(--white); line-height: 1; margin-bottom: 6px; font-family: var(--mono); }
+.stat-sub  { font-size: 12px; color: var(--sub); }
+.stat-badge {
+  display: inline-block; font-size: 10px; padding: 3px 8px;
+  border-radius: 6px; font-family: var(--mono); margin-top: 8px;
 }
+.sb-green  { background: rgba(52,211,153,0.1);  color: var(--green); }
+.sb-yellow { background: rgba(251,191,36,0.1);  color: var(--yellow); }
+.sb-purple { background: rgba(124,106,247,0.1); color: var(--accent2); }
+.sb-dim    { background: rgba(255,255,255,0.04); color: var(--sub); }
 
-/* Chart card */
-.chart-card { padding: 20px; }
-.chart-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 16px; }
-.chart-title { font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 2px; }
-.chart-sub   { font-size: 12px; color: var(--sub); }
-.chart-price { font-size: 28px; font-weight: 600; color: var(--text); font-family: var(--mono); }
-.chart-wrap  { height: 140px; position: relative; }
-canvas       { width: 100%; height: 100%; display: block; }
+/* ── MIDDLE ROW ── */
+.mid { display: grid; grid-template-columns: 1fr 340px; gap: 16px; margin-bottom: 20px; }
 
-/* Threshold card */
-.thresh-card { padding: 20px; }
-.thresh-big  { font-size: 44px; font-weight: 600; color: var(--text); font-family: var(--mono); line-height: 1; }
+/* Chart */
+.chart-card { padding: 24px; }
+.chart-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 18px; }
+.chart-title  { font-size: 13px; font-weight: 500; color: var(--text); margin-bottom: 3px; }
+.chart-sub    { font-size: 11px; color: var(--sub); font-family: var(--mono); }
+.chart-price  { font-size: 24px; font-weight: 600; color: var(--white); font-family: var(--mono); text-align: right; }
+.chart-hl     { font-size: 11px; color: var(--sub); font-family: var(--mono); text-align: right; margin-top: 3px; }
+.chart-wrap   { height: 160px; }
+canvas        { width: 100%; height: 100%; display: block; }
+
+/* Threshold + Calib */
+.thresh-calib { padding: 24px; }
+.tc-label { font-size: 11px; color: var(--sub); letter-spacing: 1.5px; margin-bottom: 8px; font-family: var(--mono); }
+.thresh-num {
+  font-size: 48px; font-weight: 600; color: var(--white);
+  font-family: var(--mono); line-height: 1; margin-bottom: 4px;
+}
 .thresh-unit { font-size: 14px; color: var(--sub); font-weight: 400; }
 .thresh-track {
-  height: 6px; background: var(--bg); border-radius: 99px;
-  margin: 16px 0 8px; overflow: hidden;
+  height: 4px; border-radius: 99px;
+  background: var(--bg3); margin: 14px 0 6px; overflow: hidden;
 }
 .thresh-fill {
   height: 100%; border-radius: 99px;
-  background: linear-gradient(90deg, var(--up), var(--warn), var(--dn));
+  background: linear-gradient(90deg, var(--green), var(--yellow), var(--red));
   transition: width 1s ease;
 }
-.thresh-row { display: flex; justify-content: space-between; font-size: 11px; color: var(--dim); margin-bottom: 16px; }
-.calib-rows { margin-top: 4px; }
-.crow {
-  display: flex; align-items: center; gap: 10px;
-  padding: 7px 0; border-bottom: 1px solid var(--border);
-}
-.crow:last-child { border: none; }
-.cname { font-size: 11px; color: var(--sub); width: 110px; flex-shrink: 0; font-weight: 500; }
-.ctrack { flex: 1; height: 4px; background: var(--bg); border-radius: 99px; overflow: hidden; }
-.cfill  { height: 100%; border-radius: 99px; background: var(--blue); transition: width .8s ease; }
-.cfill.lo  { background: var(--dim); }
-.cfill.mid { background: var(--warn); }
-.cval  { font-size: 11px; color: var(--sub); width: 80px; text-align: right; font-family: var(--mono); flex-shrink: 0; }
+.thresh-labels { display: flex; justify-content: space-between; font-size: 10px; color: var(--dim); margin-bottom: 20px; font-family: var(--mono); }
+
+.calib-title { font-size: 11px; color: var(--sub); letter-spacing: 1.5px; margin-bottom: 12px; font-family: var(--mono); }
+.crow { display: flex; align-items: center; gap: 10px; padding: 6px 0; }
+.cname { font-size: 11px; color: var(--sub); width: 110px; flex-shrink: 0; }
+.ctrack { flex: 1; height: 3px; background: var(--bg3); border-radius: 99px; overflow: hidden; }
+.cfill  { height: 100%; border-radius: 99px; background: var(--accent); transition: width .8s ease; }
+.cfill.lo { background: var(--dim); }
+.cfill.hi { background: var(--green); }
+.cval   { font-size: 10px; color: var(--sub); font-family: var(--mono); width: 80px; text-align: right; flex-shrink: 0; }
+.calib-note { margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--border); font-size: 11px; color: var(--dim); line-height: 1.8; font-family: var(--mono); }
+.calib-note b { color: var(--sub); font-weight: 400; }
+
+/* ── WIN RATE ── */
+.winrate-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; margin-bottom: 20px; }
+
+.wr-card { padding: 22px 24px; }
+.wr-rate { font-size: 42px; font-weight: 600; line-height: 1; font-family: var(--mono); margin-bottom: 4px; }
+.wr-rate.good { color: var(--green); }
+.wr-rate.bad  { color: var(--red); }
+.wr-rate.neu  { color: var(--yellow); }
+.wr-rate.none { color: var(--sub); }
+.wr-track { height: 4px; background: var(--bg3); border-radius: 99px; overflow: hidden; display: flex; margin: 12px 0 6px; }
+.wr-win  { background: var(--green); height: 100%; transition: width .8s; }
+.wr-loss { background: var(--red);   height: 100%; transition: width .8s; }
+.wr-labels { display: flex; justify-content: space-between; font-size: 11px; color: var(--sub); font-family: var(--mono); }
+
+.results-card { padding: 22px 24px; grid-column: 2 / 4; }
+.result-item  { display: flex; align-items: center; gap: 10px; padding: 9px 0; border-bottom: 1px solid var(--border); }
+.result-item:last-child { border: none; }
+.result-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+.result-dot.ok   { background: var(--green); }
+.result-dot.fail { background: var(--red); }
+.result-q    { flex: 1; font-size: 12px; color: var(--text); }
+.result-edge { font-size: 11px; font-family: var(--mono); flex-shrink: 0; }
+.result-date { font-size: 10px; color: var(--dim); font-family: var(--mono); flex-shrink: 0; }
+.result-empty { font-size: 12px; color: var(--dim); padding: 16px 0; font-family: var(--mono); }
 
 /* ── RADAR ── */
 .radar-card { margin-bottom: 20px; overflow: hidden; }
 .panel-head {
   display: flex; align-items: center; justify-content: space-between;
-  padding: 14px 20px; border-bottom: 1px solid var(--border);
-  background: var(--bg);
+  padding: 16px 24px; border-bottom: 1px solid var(--border);
 }
-.panel-title { font-size: 13px; font-weight: 600; color: var(--text); }
-.panel-meta  { display: flex; gap: 16px; font-size: 12px; color: var(--sub); }
-.panel-meta b { color: var(--text); font-weight: 600; }
+.panel-title { font-size: 13px; font-weight: 500; color: var(--text); display: flex; align-items: center; gap: 8px; }
+.panel-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--accent); animation: glow 2s ease-in-out infinite; }
+.panel-meta { font-size: 11px; color: var(--sub); font-family: var(--mono); display: flex; gap: 20px; }
+.panel-meta span { color: var(--text); }
 
 table { width: 100%; border-collapse: collapse; }
 th {
-  padding: 10px 20px; text-align: left;
-  font-size: 11px; font-weight: 600; color: var(--sub);
+  padding: 10px 24px; text-align: left;
+  font-size: 10px; font-weight: 500; color: var(--dim);
   border-bottom: 1px solid var(--border);
-  background: var(--bg); letter-spacing: .3px;
+  letter-spacing: 1.5px; font-family: var(--mono);
   text-transform: uppercase;
 }
 td {
-  padding: 12px 20px;
+  padding: 13px 24px;
   border-bottom: 1px solid var(--border);
-  font-size: 13px; color: var(--text);
+  font-size: 12px; color: var(--text);
 }
 tr:last-child td { border: none; }
-tr:hover td { background: var(--bg); transition: background .1s; }
+tr:hover td { background: rgba(255,255,255,0.02); }
 
-.tq   { font-weight: 500; max-width: 300px; }
-.tq small { display: block; font-size: 11px; color: var(--sub); font-weight: 400; margin-top: 1px; }
-.bwrap { display: flex; align-items: center; gap: 8px; }
-.bbg   { flex: 1; height: 4px; background: var(--border); border-radius: 99px; min-width: 80px; overflow: hidden; }
-.bfill { height: 100%; border-radius: 99px; background: var(--blue); transition: width .8s; }
-.bfill.lo  { background: var(--border2); }
-.bfill.hi  { background: var(--up); }
-.bnum  { font-size: 12px; font-family: var(--mono); color: var(--sub); width: 46px; text-align: right; flex-shrink: 0; }
+.tq { font-weight: 500; max-width: 300px; }
+.tq small { display: block; font-size: 10px; color: var(--sub); font-family: var(--mono); margin-top: 2px; font-weight: 400; }
 
-.badge {
-  display: inline-flex; align-items: center; gap: 4px;
+.bwrap { display: flex; align-items: center; gap: 8px; min-width: 120px; }
+.bbg   { flex: 1; height: 3px; background: var(--bg3); border-radius: 99px; overflow: hidden; }
+.bfill { height: 100%; border-radius: 99px; background: var(--accent); transition: width .8s; }
+.bfill.hi { background: var(--green); }
+.bfill.lo { background: var(--dim); }
+.bnum  { font-size: 11px; font-family: var(--mono); color: var(--sub); width: 46px; text-align: right; flex-shrink: 0; }
+
+.gtag {
+  display: inline-flex; align-items: center;
   padding: 3px 8px; border-radius: 6px;
-  font-size: 11px; font-weight: 500;
+  font-size: 10px; font-family: var(--mono); font-weight: 500;
 }
-.badge.gap-close { background: var(--up-bg);   color: var(--up);   }
-.badge.gap-mid   { background: var(--warn-bg);  color: var(--warn); }
-.badge.gap-far   { background: var(--bg);       color: var(--sub);  }
-.badge.gap-pass  { background: var(--up-bg);    color: var(--up);   font-weight: 700; }
+.gtag.close  { background: rgba(52,211,153,0.12);  color: var(--green);  }
+.gtag.mid    { background: rgba(251,191,36,0.12);  color: var(--yellow); }
+.gtag.far    { background: rgba(255,255,255,0.04); color: var(--dim);    }
+.gtag.passed { background: rgba(52,211,153,0.2);   color: var(--green);  font-weight: 600; }
 
-.edge-pos { color: var(--up);   font-family: var(--mono); font-weight: 500; }
-.edge-neg { color: var(--dn);   font-family: var(--mono); font-weight: 500; }
-.dir-up   { color: var(--up);   font-size: 12px; }
-.dir-dn   { color: var(--dn);   font-size: 12px; }
+.dir-up { color: var(--green); }
+.dir-dn { color: var(--red); }
+.edge-pos { color: var(--green); font-family: var(--mono); font-weight: 500; }
+.edge-neg { color: var(--red);   font-family: var(--mono); font-weight: 500; }
 
 .urgent-tag {
-  display: inline-flex; align-items: center;
-  padding: 1px 6px; border-radius: 4px;
-  background: var(--dn-bg); color: var(--dn);
-  font-size: 10px; font-weight: 600; margin-left: 6px;
+  display: inline-flex; padding: 1px 6px; border-radius: 4px;
+  background: rgba(248,113,113,0.15); color: var(--red);
+  font-size: 9px; font-weight: 600; margin-left: 6px; font-family: var(--mono);
   animation: blink 1.5s step-end infinite;
 }
 @keyframes blink { 50%{opacity:.3} }
 
-.action-yes  { color: var(--up);   font-weight: 600; font-size: 12px; }
-.action-no   { color: var(--dn);   font-weight: 600; font-size: 12px; }
-.action-wait { color: var(--dim);  font-size: 12px; }
+.action-yes  { color: var(--green);  font-weight: 600; font-size: 11px; font-family: var(--mono); }
+.action-no   { color: var(--red);    font-weight: 600; font-size: 11px; font-family: var(--mono); }
+.action-wait { color: var(--dim);    font-size: 11px;  font-family: var(--mono); }
 
 .empty {
-  padding: 36px; text-align: center;
-  font-size: 13px; color: var(--sub);
+  padding: 40px 24px; text-align: center;
+  font-size: 12px; color: var(--dim); font-family: var(--mono);
+  letter-spacing: 1px;
 }
-.empty-icon { font-size: 28px; margin-bottom: 8px; opacity: .4; }
+.empty-icon { font-size: 24px; margin-bottom: 10px; opacity: .3; display: block; }
 
-/* ── BOTTOM ROW ── */
-.bottom-row {
-  display: grid;
-  grid-template-columns: 1fr 260px;
-  gap: 14px;
-}
+/* ── OPP CARD ── */
+.opp-card { margin-bottom: 20px; overflow: hidden; }
 
-/* Summary card */
-.sum-card { padding: 20px; }
-.sum-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-.sum-item { }
-.sum-num  { font-size: 28px; font-weight: 600; color: var(--text); font-family: var(--mono); line-height: 1; }
-.sum-lbl  { font-size: 11px; color: var(--sub); margin-top: 3px; text-transform: uppercase; letter-spacing: .5px; font-weight: 500; }
-.sum-div  { height: 1px; background: var(--border); margin: 16px 0; }
-.sum-note { font-size: 12px; color: var(--sub); line-height: 1.7; }
-.sum-note b { color: var(--text); font-weight: 600; }
-
-/* Statusbar */
+/* ── STATUS BAR ── */
 .statusbar {
-  margin-top: 20px;
-  display: flex; align-items: center; gap: 6px;
-  flex-wrap: wrap;
+  display: flex; align-items: center; gap: 8px;
+  flex-wrap: wrap; padding-top: 8px;
 }
-.sb-chip {
+.sc {
   display: flex; align-items: center; gap: 6px;
-  padding: 6px 12px; border-radius: 8px;
-  background: var(--surface); border: 1px solid var(--border);
-  font-size: 12px; color: var(--sub);
+  padding: 6px 13px; border-radius: 8px;
+  background: var(--bg2); border: 1px solid var(--border);
+  font-size: 11px; color: var(--sub); font-family: var(--mono);
 }
-.sb-chip b { color: var(--text); font-weight: 600; font-family: var(--mono); }
-.sb-chip-r { margin-left: auto; }
+.sc b { color: var(--text); font-weight: 400; }
+.sc-r { margin-left: auto; }
+
+/* Fade in */
+.fade { animation: fadeUp .5s ease both; }
+@keyframes fadeUp { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+.fade-2 { animation-delay: .08s; }
+.fade-3 { animation-delay: .16s; }
+.fade-4 { animation-delay: .24s; }
 </style>
 </head>
 <body>
 
-<!-- SIDEBAR -->
-<aside class="sidebar">
-  <div class="sidebar-logo">
-    <div class="logo-mark">₿</div>
-    <div class="logo-name">BTC Bot</div>
-    <div class="logo-sub">Polymarket Monitor</div>
-  </div>
-
-  <nav class="sidebar-nav">
-    <div class="nav-label">Overview</div>
-    <div class="nav-item active">
-      <span class="icon">◉</span> Dashboard
-    </div>
-    <div class="nav-item">
-      <span class="icon">◎</span> Radar
-      <span class="nav-badge" id="nav-radar">0</span>
-    </div>
-    <div class="nav-item">
-      <span class="icon">◈</span> Opportunities
-      <span class="nav-badge green" id="nav-opps">0</span>
-    </div>
-    <div class="nav-label" style="margin-top:12px">System</div>
-    <div class="nav-item">
-      <span class="icon">◧</span> Calibration
-    </div>
-    <div class="nav-item">
-      <span class="icon">◦</span> Settings
-    </div>
-  </nav>
-
-  <div class="sidebar-footer">
-    <div class="status-dot">
-      <div class="dot"></div>
-      <span>Bot running</span>
-    </div>
-    <div style="font-size:11px;color:var(--dim);margin-top:4px" id="sb-lastupd">—</div>
-  </div>
-</aside>
-
-<!-- MAIN -->
-<main class="main">
-
-  <!-- TOPBAR -->
-  <div class="topbar">
-    <div class="topbar-left">
-      <h1>Dashboard</h1>
-      <p id="topbar-date">Loading...</p>
-    </div>
-    <div class="topbar-right">
-      <div class="time-chip">
-        <span class="dot" style="width:6px;height:6px"></span>
-        <span id="top-time">—</span>
-      </div>
-      <button class="refresh-btn" onclick="fetchData()">↻ Refresh</button>
+<header>
+  <div class="logo">
+    <div class="logo-icon">₿</div>
+    <div>
+      <div class="logo-text">BTC Bot</div>
+      <div class="logo-sub">Polymarket Monitor</div>
     </div>
   </div>
+  <div class="header-right">
+    <div class="time-chip" id="hdr-time">—</div>
+    <div class="live-pill"><div class="live-dot"></div>LIVE</div>
+    <button class="refresh-btn" onclick="fetchData()">↻ Refresh</button>
+  </div>
+</header>
 
-  <!-- STATS ROW -->
-  <div class="stats-row">
-    <div class="card stat-card">
-      <div class="stat-card-top">
-        <div class="stat-card-label">BTC Price</div>
-        <div class="stat-icon blue">₿</div>
+<div class="page">
+
+  <!-- HERO ROW -->
+  <div class="hero fade">
+
+    <!-- BTC Price -->
+    <div class="card card-btc">
+      <div class="btc-label">BTC / USDT</div>
+      <div class="btc-price" id="p-price">—</div>
+      <div class="btc-meta">
+        <span class="btc-badge up" id="p-chg">—</span>
+        <span class="btc-hl" id="p-hl"></span>
+        <span class="btc-src" id="p-src">—</span>
       </div>
-      <div class="stat-num" id="s-price">—</div>
-      <span class="stat-change" id="s-chg">—</span>
     </div>
+
+    <!-- Total Scans -->
     <div class="card stat-card">
-      <div class="stat-card-top">
-        <div class="stat-card-label">Total Scans</div>
-        <div class="stat-icon green">⟳</div>
-      </div>
-      <div class="stat-num" id="s-scans">—</div>
-      <span class="stat-change neu" id="s-skips">— atlama</span>
+      <div class="stat-lbl">TOTAL SCANS</div>
+      <div class="stat-val" id="s-scans">—</div>
+      <div class="stat-sub" id="s-skips">—</div>
+      <span class="stat-badge sb-green">Active</span>
     </div>
+
+    <!-- Signals -->
     <div class="card stat-card">
-      <div class="stat-card-top">
-        <div class="stat-card-label">Signals Found</div>
-        <div class="stat-icon yellow">◈</div>
-      </div>
-      <div class="stat-num" id="s-opps">—</div>
-      <span class="stat-change neu">Total signals</span>
+      <div class="stat-lbl">SIGNALS FOUND</div>
+      <div class="stat-val" id="s-opps">—</div>
+      <div class="stat-sub">Total signals</div>
+      <span class="stat-badge sb-purple" id="s-pending">— pending</span>
     </div>
+
+    <!-- Threshold -->
     <div class="card stat-card">
-      <div class="stat-card-top">
-        <div class="stat-card-label">Active Threshold</div>
-        <div class="stat-icon red">⊙</div>
-      </div>
-      <div class="stat-num" id="s-thresh">—</div>
-      <span class="stat-change neu">/ 100 pts</span>
+      <div class="stat-lbl">ACTIVE THRESHOLD</div>
+      <div class="stat-val" id="s-thresh">—</div>
+      <div class="stat-sub">/ 100 pts</div>
+      <span class="stat-badge sb-yellow">Auto-calibrating</span>
     </div>
+
   </div>
 
   <!-- MID ROW -->
-  <div class="mid-row">
+  <div class="mid fade fade-2">
 
     <!-- Chart -->
     <div class="card chart-card">
@@ -410,186 +395,136 @@ tr:hover td { background: var(--bg); transition: background .1s; }
           <div class="chart-title">BTC / USDT — Price Chart</div>
           <div class="chart-sub" id="chart-src">Source: —</div>
         </div>
-        <div style="text-align:right">
+        <div>
           <div class="chart-price" id="chart-price">—</div>
-          <div style="font-size:12px;color:var(--sub)" id="chart-hl"></div>
+          <div class="chart-hl" id="chart-hl"></div>
         </div>
       </div>
-      <div class="chart-wrap">
-        <canvas id="chart"></canvas>
-      </div>
+      <div class="chart-wrap"><canvas id="chart"></canvas></div>
     </div>
 
-    <!-- Threshold -->
-    <div class="card thresh-card">
-      <div style="font-size:12px;font-weight:600;color:var(--sub);margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px">Active Score Threshold</div>
+    <!-- Threshold + Calibration -->
+    <div class="card thresh-calib">
+      <div class="tc-label">SCORE THRESHOLD</div>
       <div>
-        <span class="thresh-big" id="th-val">—</span>
+        <span class="thresh-num" id="th-val">—</span>
         <span class="thresh-unit"> / 100</span>
       </div>
       <div class="thresh-track">
         <div class="thresh-fill" id="th-bar" style="width:38%"></div>
       </div>
-      <div class="thresh-row">
+      <div class="thresh-labels">
         <span id="th-min">20 — aggressive</span>
         <span id="th-max">60 — conservative</span>
       </div>
 
-      <div style="font-size:12px;font-weight:600;color:var(--sub);margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px">Calibration</div>
-      <div class="calib-rows">
-        <div class="crow">
-          <div class="cname">Volatility</div>
-          <div class="ctrack"><div class="cfill lo" id="cf-vol" style="width:3%"></div></div>
-          <div class="cval" id="cv-vol">—</div>
-        </div>
-        <div class="crow">
-          <div class="cname">Signal Quality</div>
-          <div class="ctrack"><div class="cfill mid" id="cf-qual" style="width:50%"></div></div>
-          <div class="cval" id="cv-qual">No data</div>
-        </div>
-        <div class="crow">
-          <div class="cname">Spread</div>
-          <div class="ctrack"><div class="cfill lo" id="cf-spread" style="width:3%"></div></div>
-          <div class="cval" id="cv-spread">—</div>
-        </div>
-        <div class="crow">
-          <div class="cname">Urgent Markets</div>
-          <div class="ctrack"><div class="cfill lo" id="cf-urgent" style="width:3%"></div></div>
-          <div class="cval" id="cv-urgent">None</div>
-        </div>
-        <div class="crow">
-          <div class="cname">Market Ceiling</div>
-          <div class="ctrack"><div class="cfill lo" id="cf-ceil" style="width:3%"></div></div>
-          <div class="cval" id="cv-ceil">—</div>
-        </div>
+      <div class="calib-title">CALIBRATION FACTORS</div>
+      <div class="crow">
+        <div class="cname">Volatility</div>
+        <div class="ctrack"><div class="cfill lo" id="cf-vol" style="width:3%"></div></div>
+        <div class="cval" id="cv-vol">—</div>
       </div>
-      <div style="margin-top:12px;font-size:11px;color:var(--sub)">
-        Last change: <b style="color:var(--text)" id="cf-last">Monitoring</b><br>
-        Next: <b style="color:var(--text)" id="cf-next">—</b>
+      <div class="crow">
+        <div class="cname">Signal Quality</div>
+        <div class="ctrack"><div class="cfill" id="cf-qual" style="width:50%"></div></div>
+        <div class="cval" id="cv-qual">No data</div>
+      </div>
+      <div class="crow">
+        <div class="cname">Spread</div>
+        <div class="ctrack"><div class="cfill lo" id="cf-spread" style="width:3%"></div></div>
+        <div class="cval" id="cv-spread">—</div>
+      </div>
+      <div class="crow">
+        <div class="cname">Urgent Markets</div>
+        <div class="ctrack"><div class="cfill lo" id="cf-urgent" style="width:3%"></div></div>
+        <div class="cval" id="cv-urgent">None</div>
+      </div>
+      <div class="crow">
+        <div class="cname">Market Ceiling</div>
+        <div class="ctrack"><div class="cfill lo" id="cf-ceil" style="width:3%"></div></div>
+        <div class="cval" id="cv-ceil">—</div>
+      </div>
+
+      <div class="calib-note">
+        Last change: <b id="cf-last">Monitoring</b><br>
+        Next: <b id="cf-next">—</b>
       </div>
     </div>
+
+  </div>
+
+  <!-- WIN RATE ROW -->
+  <div class="winrate-row fade fade-3">
+
+    <!-- Win Rate -->
+    <div class="card wr-card">
+      <div class="stat-lbl">WIN RATE</div>
+      <div class="wr-rate none" id="wr-rate">—</div>
+      <div class="wr-track">
+        <div class="wr-win"  id="wr-bar-win"  style="width:0%"></div>
+        <div class="wr-loss" id="wr-bar-loss" style="width:0%"></div>
+      </div>
+      <div class="wr-labels">
+        <span id="wr-lbl-win">0 correct</span>
+        <span id="wr-lbl-loss">0 wrong</span>
+      </div>
+      <div style="margin-top:14px;font-size:11px;color:var(--dim);font-family:var(--mono)">
+        Total: <span style="color:var(--sub)" id="wr-total">0</span> &nbsp;·&nbsp;
+        Pending: <span style="color:var(--sub)" id="wr-pending">0</span>
+      </div>
+    </div>
+
+    <!-- Recent Results -->
+    <div class="card results-card">
+      <div class="stat-lbl">RECENT RESULTS</div>
+      <div id="wr-recent"><div class="result-empty">No completed predictions yet</div></div>
+    </div>
+
   </div>
 
   <!-- RADAR -->
-  <div class="card radar-card">
+  <div class="card radar-card fade fade-4">
     <div class="panel-head">
-      <div class="panel-title">◎ Radar — Below Threshold Markets</div>
+      <div class="panel-title">
+        <div class="panel-dot"></div>
+        Radar — Below Threshold Markets
+      </div>
       <div class="panel-meta">
-        <span>Ceiling: <b id="rd-ceil">—</b></span>
-        <span>Threshold: <b id="rd-thresh">—</b></span>
-        <span>Gap: <b id="rd-gap">—</b></span>
+        Ceiling: <span id="rd-ceil">—</span> &nbsp;
+        Threshold: <span id="rd-thresh">—</span> &nbsp;
+        Gap: <span id="rd-gap">—</span>
       </div>
     </div>
-    <div id="radar-body">
-      <div class="empty"><div class="empty-icon">◎</div>Scanning...</div>
-    </div>
+    <div id="radar-body"><div class="empty"><span class="empty-icon">◎</span>Scanning...</div></div>
   </div>
 
-  <!-- WIN RATE KARTI -->
-  <div class="card" style="margin-bottom:14px;padding:20px">
-    <div style="font-size:12px;font-weight:600;color:var(--sub);margin-bottom:14px;text-transform:uppercase;letter-spacing:.5px">
-      Prediction Performance
-    </div>
-    <div style="display:grid;grid-template-columns:1fr 1fr 200px;gap:24px;align-items:start">
-      <div>
-        <div class="wr-rate" id="wr-rate">—</div>
-        <div class="wr-lbl">Win Rate</div>
-        <div class="wr-bar-wrap">
-          <div class="wr-bar-track">
-            <div class="wr-bar-win"  id="wr-bar-win"  style="width:0%"></div>
-            <div class="wr-bar-loss" id="wr-bar-loss" style="width:0%"></div>
-          </div>
-          <div class="wr-bar-labels">
-            <span id="wr-lbl-win">0 correct</span>
-            <span id="wr-lbl-loss">0 wrong</span>
-          </div>
-        </div>
-        <div class="wr-pending">WAITyen: <b id="wr-pending">—</b> predictions</div>
+  <!-- OPPORTUNITIES -->
+  <div class="card opp-card fade fade-4">
+    <div class="panel-head">
+      <div class="panel-title">
+        <div class="panel-dot" style="background:var(--green)"></div>
+        Opportunity List
       </div>
-      <div>
-        <div class="wr-grid">
-          <div class="wr-item">
-            <div class="wr-num win" id="wr-correct">—</div>
-            <div class="wr-lbl">Correct</div>
-          </div>
-          <div class="wr-item">
-            <div class="wr-num loss" id="wr-wrong">—</div>
-            <div class="wr-lbl">Wrong</div>
-          </div>
-          <div class="wr-item">
-            <div class="wr-num" id="wr-total">—</div>
-            <div class="wr-lbl">Total</div>
-          </div>
-          <div class="wr-item">
-            <div class="wr-num" id="wr-pend2">—</div>
-            <div class="wr-lbl">WAITyen</div>
-          </div>
-        </div>
-      </div>
-      <div>
-        <div style="font-size:11px;font-weight:600;color:var(--sub);margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px">Recent Results</div>
-        <div id="wr-recent"><div style="font-size:12px;color:var(--sub)">No results yet</div></div>
+      <div class="panel-meta">
+        Sorted by score &nbsp;·&nbsp; Total: <span id="opp-total">0</span>
       </div>
     </div>
+    <div id="opp-body"><div class="empty"><span class="empty-icon">◈</span>No opportunities found yet</div></div>
   </div>
 
-  <!-- BOTTOM ROW -->
-  <div class="bottom-row">
-
-    <!-- Opportunities -->
-    <div class="card" style="overflow:hidden">
-      <div class="panel-head">
-        <div class="panel-title">◈ Opportunity List</div>
-        <div class="panel-meta">
-          Score sıralı &nbsp;·&nbsp; Total: <b id="opp-total">0</b>
-        </div>
-      </div>
-      <div id="opp-body">
-        <div class="empty"><div class="empty-icon">◈</div>No opportunities found yet</div>
-      </div>
-    </div>
-
-    <!-- Summary -->
-    <div class="card sum-card">
-      <div style="font-size:12px;font-weight:600;color:var(--sub);margin-bottom:14px;text-transform:uppercase;letter-spacing:.5px">24h Summary</div>
-      <div class="sum-grid">
-        <div class="sum-item">
-          <div class="sum-num" id="sm-scans">—</div>
-          <div class="sum-lbl">Scans</div>
-        </div>
-        <div class="sum-item">
-          <div class="sum-num" id="sm-skips">—</div>
-          <div class="sum-lbl">Skipped</div>
-        </div>
-        <div class="sum-item">
-          <div class="sum-num" id="sm-opps">—</div>
-          <div class="sum-lbl">Fırsat</div>
-        </div>
-        <div class="sum-item">
-          <div class="sum-num" id="sm-ceil">—</div>
-          <div class="sum-lbl">Market Ceiling</div>
-        </div>
-      </div>
-      <div class="sum-div"></div>
-      <div class="sum-note" id="sm-note">—</div>
-    </div>
-
-  </div>
-
-  <!-- STATUSBAR -->
+  <!-- STATUS BAR -->
   <div class="statusbar">
-    <div class="sb-chip">Son Scans: <b id="sbt">—</b></div>
-    <div class="sb-chip">Scans: <b id="sb-scans">—</b></div>
-    <div class="sb-chip">Skipped: <b id="sb-skips">—</b></div>
-    <div class="sb-chip">Signals: <b id="sb-opps">—</b></div>
-    <div class="sb-chip">Threshold: <b id="sb-thresh">—</b></div>
-    <div class="sb-chip sb-chip-r" style="margin-left:auto">30s refresh</div>
+    <div class="sc">Last scan: <b id="sbt">—</b></div>
+    <div class="sc">Scans: <b id="sb-scans">—</b></div>
+    <div class="sc">Skipped: <b id="sb-skips">—</b></div>
+    <div class="sc">Signals: <b id="sb-opps">—</b></div>
+    <div class="sc">Threshold: <b id="sb-thresh">—</b></div>
+    <div class="sc sc-r">30s refresh</div>
   </div>
 
-</main>
+</div>
 
 <script>
-// ── CONFIG ──
 const BTC_BIN_ID  = '69b2ca72aa77b81da9dbbb81';
 const JSONBIN_KEY = '$2a$10$.quh6XoPJ4MjL.ls.ejOxuw0ZtOxjqFHe7Ca8gHtiOm79anzFshT2';
 const REFRESH_MS  = 30000;
@@ -618,37 +553,33 @@ function drawChart() {
   if (chartData.length < 2) return;
 
   const mn = Math.min(...chartData)*.9995, mx = Math.max(...chartData)*1.0005;
-  const rng = mx-mn, pt=8, pb=8;
+  const rng = mx-mn, pt=6, pb=6;
   const x = i => (i/(chartData.length-1))*w;
   const y = v => pt + (1-(v-mn)/rng)*(h-pt-pb);
 
-  // Grid
-  ctx.strokeStyle = 'rgba(0,0,0,0.04)'; ctx.lineWidth = 1;
+  ctx.strokeStyle = 'rgba(124,106,247,0.08)'; ctx.lineWidth = 1;
   [1,2,3].forEach(i => {
     const yy = pt+(i/4)*(h-pt-pb);
     ctx.beginPath(); ctx.moveTo(0,yy); ctx.lineTo(w,yy); ctx.stroke();
   });
 
-  // Fill
   const g = ctx.createLinearGradient(0,pt,0,h);
-  g.addColorStop(0,'rgba(37,99,235,0.12)');
-  g.addColorStop(1,'rgba(37,99,235,0)');
+  g.addColorStop(0,'rgba(124,106,247,0.2)');
+  g.addColorStop(1,'rgba(124,106,247,0)');
   ctx.beginPath(); ctx.moveTo(x(0),y(chartData[0]));
   chartData.forEach((v,i) => ctx.lineTo(x(i),y(v)));
   ctx.lineTo(w,h); ctx.lineTo(0,h); ctx.closePath();
   ctx.fillStyle = g; ctx.fill();
 
-  // Line
   ctx.beginPath(); ctx.moveTo(x(0),y(chartData[0]));
   chartData.forEach((v,i) => ctx.lineTo(x(i),y(v)));
-  ctx.strokeStyle = '#2563eb'; ctx.lineWidth = 2; ctx.stroke();
+  ctx.strokeStyle = '#7c6af7'; ctx.lineWidth = 2; ctx.stroke();
 
-  // Dot
   const lx=x(179), ly=y(chartData[179]);
   ctx.beginPath(); ctx.arc(lx,ly,4,0,Math.PI*2);
-  ctx.fillStyle='#2563eb'; ctx.fill();
-  ctx.beginPath(); ctx.arc(lx,ly,7,0,Math.PI*2);
-  ctx.fillStyle='rgba(37,99,235,0.2)'; ctx.fill();
+  ctx.fillStyle='#a78bfa'; ctx.fill();
+  ctx.beginPath(); ctx.arc(lx,ly,8,0,Math.PI*2);
+  ctx.fillStyle='rgba(124,106,247,0.2)'; ctx.fill();
 }
 
 function tickChart(p) {
@@ -658,62 +589,15 @@ function tickChart(p) {
   drawChart();
 }
 
-
-// ── WIN RATE ──────────────────────────────
-function updateWinRate(ps) {
-  if (!ps) return;
-  const total   = ps.total   || 0;
-  const correct = ps.correct || 0;
-  const wrong   = ps.wrong   || 0;
-  const pending = ps.pending || 0;
-  const rate    = ps.win_rate;
-
-  // Rate
-  const rateEl = document.getElementById('wr-rate');
-  if (rateEl) {
-    rateEl.textContent = rate !== null && rate !== undefined ? rate.toFixed(1) + '%' : '—';
-    rateEl.className = 'wr-rate ' + (rate >= 60 ? 'good' : rate >= 40 ? 'neu' : total > 0 ? 'bad' : '');
-  }
-
-  // Bar
-  const winPct  = total > 0 ? (correct / total * 100) : 0;
-  const lossPct = total > 0 ? (wrong   / total * 100) : 0;
-  const bw = document.getElementById('wr-bar-win');
-  const bl = document.getElementById('wr-bar-loss');
-  if (bw) bw.style.width = winPct + '%';
-  if (bl) bl.style.width = lossPct + '%';
-
-  $('wr-lbl-win',  correct + ' correct');
-  $('wr-lbl-loss', wrong   + ' wrong');
-  $('wr-correct',  correct);
-  $('wr-wrong',    wrong);
-  $('wr-total',    total);
-  $('wr-pending',  pending);
-  $('wr-pend2',    pending);
-
-  // Son sonuçlar
-  const recentEl = document.getElementById('wr-recent');
-  if (recentEl && ps.recent && ps.recent.length > 0) {
-    recentEl.innerHTML = ps.recent.map(r => `
-      <div class="result-row">
-        <span class="result-icon">${r.correct ? '✅' : '❌'}</span>
-        <span class="result-q">${r.question}</span>
-        <span class="result-edge" style="color:${r.edge_pct>0?'var(--up)':'var(--dn)'}">${r.edge_pct>0?'+':''}${r.edge_pct.toFixed(1)}%</span>
-        <span class="result-date">${(r.closed_at||'').slice(11,16)}</span>
-      </div>
-    `).join('');
-  }
-}
-
 // ── FETCH ──
 async function fetchData() {
-  if (!BTC_BIN_ID||!JSONBIN_KEY) { $('top-time','BIN ID / KEY GİRİLMEDİ'); return; }
+  if (!BTC_BIN_ID||!JSONBIN_KEY) { $('hdr-time','BIN ID / KEY MISSING'); return; }
   try {
     const r = await fetch(`https://api.jsonbin.io/v3/b/${BTC_BIN_ID}/latest`,
       {headers:{'X-Master-Key':JSONBIN_KEY}});
     if (!r.ok) throw new Error(r.status);
     update((await r.json()).record);
-  } catch(e) { $('top-time','Hata: '+e.message); }
+  } catch(e) { $('hdr-time','Error: '+e.message); }
 }
 
 let prevThresh = null;
@@ -730,31 +614,33 @@ function update(d) {
   const ceil   = d.market_ceiling || null;
   const upd    = d.last_update || '';
   const c      = d.calib || {};
-  const now    = new Date();
+  const ps     = d.prediction_stats || {};
 
-  // Topbar
-  $('topbar-date', now.toLocaleDateString('tr-TR',{weekday:'long',day:'numeric',month:'long',year:'numeric'}));
-  $('top-time', upd ? upd.slice(11,19)+' UTC' : now.toTimeString().slice(0,8));
-  $('sb-lastupd', upd ? 'Last: '+upd.slice(11,19)+' UTC' : '—');
+  // Header
+  const now = new Date();
+  $('hdr-time', upd ? upd.slice(11,19)+' UTC' : now.toTimeString().slice(0,8)+' UTC');
 
-  // Stats
+  // BTC
   if (price > 0) {
-    $('s-price', '$'+Math.round(price).toLocaleString());
+    $('p-price', '$'+Math.round(price).toLocaleString());
     $('chart-price', '$'+Math.round(price).toLocaleString());
-    const chgEl = document.getElementById('s-chg');
+    const chgEl = document.getElementById('p-chg');
     chgEl.textContent = (chg>=0?'▲ +':'▼ ')+chg.toFixed(2)+'%';
-    chgEl.className = 'stat-change '+(chg>=0?'up':'dn');
-    $('chart-src', 'Source: '+src);
-    if (d.btc_high_24h&&d.btc_low_24h)
-      $('chart-hl','H $'+Math.round(d.btc_high_24h).toLocaleString()+'  ·  L $'+Math.round(d.btc_low_24h).toLocaleString());
+    chgEl.className = 'btc-badge '+(chg>=0?'up':'down');
+    $('p-src', src); $('chart-src', 'Source: '+src);
+    if (d.btc_high_24h && d.btc_low_24h)
+      $('p-hl','H $'+Math.round(d.btc_high_24h).toLocaleString()+'  ·  L $'+Math.round(d.btc_low_24h).toLocaleString());
+    if (d.btc_high_24h) $('chart-hl','H $'+Math.round(d.btc_high_24h).toLocaleString()+' · L $'+Math.round(d.btc_low_24h).toLocaleString());
     if (!lastPrice) initChart(price);
     lastPrice = price; tickChart(price);
   }
 
-  $('s-scans', scans.toLocaleString());
-  $('s-skips', skips+' skipped');
-  $('s-opps',  d.total_opportunities||opps);
+  // Stats
+  $('s-scans',  scans.toLocaleString());
+  $('s-skips',  skips+' skipped');
+  $('s-opps',   d.total_opportunities||opps);
   $('s-thresh', typeof thresh==='number'?thresh.toFixed(1):thresh);
+  $('s-pending', (ps.pending||0)+' pending');
 
   // Threshold
   const tMin=d.threshold_min||20, tMax=d.threshold_max||60;
@@ -769,11 +655,11 @@ function update(d) {
   const urgent = c.avg_urgent||0;
   const samples= c.vol_samples||0;
 
-  setBar('vol',    Math.max(move/2*100,2),     move<.01?'No data':move.toFixed(3)+'%', move>1.5?'hi':move<.3?'lo':'mid');
-  setBar('qual',   score,                       score<1?'No data':score.toFixed(0)+'/100', score>60?'hi':score<35?'lo':'mid');
-  setBar('spread', Math.min(spread/5*100,100),  spread<.001?'—':spread.toFixed(2)+'%', spread>3?'lo':'mid');
-  setBar('urgent', Math.min(urgent/3*100,100),  urgent<.1?'None':urgent.toFixed(1)+' active', urgent>1?'hi':'lo');
-  if (ceil) setBar('ceil', Math.min(ceil,100), ceil.toFixed(1)+'/100', 'mid');
+  setBar('vol',    Math.max(move/2*100,2),    move<.01?'Collecting':move.toFixed(3)+'%', move>1.5?'hi':move<.3?'lo':'');
+  setBar('qual',   score,                      score<1?'No data':score.toFixed(0)+'/100', score>60?'hi':score<35?'lo':'');
+  setBar('spread', Math.min(spread/5*100,100), spread<.001?'—':spread.toFixed(2)+'%', spread>3?'lo':'');
+  setBar('urgent', Math.min(urgent/3*100,100), urgent<.1?'None':urgent.toFixed(1)+' active', urgent>1?'hi':'lo');
+  if (ceil) setBar('ceil', Math.min(ceil,100), ceil.toFixed(1)+'/100', '');
 
   if (prevThresh!==null && prevThresh!==thresh) {
     const diff=(thresh-prevThresh).toFixed(1);
@@ -783,12 +669,8 @@ function update(d) {
   const next = 30-(samples%30)||30;
   $('cf-next', next+' scans away');
 
-  // Nav badges
-  $('nav-radar', (d.radar||[]).length);
-  $('nav-opps',  d.total_opportunities||opps);
-
   // Win Rate
-  updateWinRate(d.prediction_stats);
+  updateWinRate(ps);
 
   // Radar
   $('rd-ceil',   ceil?ceil.toFixed(1)+'/100':'—');
@@ -799,96 +681,92 @@ function update(d) {
   // Opps
   renderOpps(d.opportunities||[]);
 
-  // Summary
-  $('sm-scans', scans.toLocaleString());
-  $('sm-skips', skips);
-  $('sm-opps',  d.total_opportunities||opps);
-  $('sm-ceil',  ceil?ceil.toFixed(1):'—');
-  $('sm-note',  `Next calibration: ${next} scans\nThreshold range: ${tMin} – ${tMax}`);
-
   // Statusbar
   $('sbt',       upd?upd.slice(11,19)+' UTC':'—');
-  $('sb-scans',  scans);
-  $('sb-skips',  skips);
-  $('sb-opps',   opps);
-  $('sb-thresh', thresh);
+  $('sb-scans',  scans); $('sb-skips', skips);
+  $('sb-opps',   opps); $('sb-thresh', thresh);
 }
 
 function setBar(id, pct, val, cls) {
   const f=document.getElementById('cf-'+id);
   const v=document.getElementById('cv-'+id);
-  if (f) { f.style.width=Math.max(pct,2)+'%'; f.className='cfill '+(cls||'mid'); }
+  if (f) { f.style.width=Math.max(pct,2)+'%'; f.className='cfill '+(cls||''); }
   if (v) v.textContent=val;
+}
+
+function updateWinRate(ps) {
+  if (!ps) return;
+  const total=ps.total||0, correct=ps.correct||0, wrong=ps.wrong||0;
+  const rate=ps.win_rate;
+  const rEl=document.getElementById('wr-rate');
+  if (rEl) {
+    rEl.textContent = rate!==null&&rate!==undefined ? rate.toFixed(1)+'%' : '—';
+    rEl.className = 'wr-rate '+(total===0?'none':rate>=60?'good':rate>=40?'neu':'bad');
+  }
+  const wp=total>0?(correct/total*100):0, lp=total>0?(wrong/total*100):0;
+  const bw=document.getElementById('wr-bar-win'), bl=document.getElementById('wr-bar-loss');
+  if (bw) bw.style.width=wp+'%';
+  if (bl) bl.style.width=lp+'%';
+  $('wr-lbl-win',  correct+' correct');
+  $('wr-lbl-loss', wrong+' wrong');
+  $('wr-total',    total);
+  $('wr-pending',  ps.pending||0);
+
+  const recentEl=document.getElementById('wr-recent');
+  if (recentEl && ps.recent && ps.recent.length>0) {
+    recentEl.innerHTML=ps.recent.map(r=>`
+      <div class="result-item">
+        <div class="result-dot ${r.correct?'ok':'fail'}"></div>
+        <div class="result-q">${r.question}</div>
+        <div class="result-edge" style="color:${r.edge_pct>0?'var(--green)':'var(--red)'}">${r.edge_pct>0?'+':''}${r.edge_pct.toFixed(1)}%</div>
+        <div class="result-date">${(r.closed_at||'').slice(11,16)}</div>
+      </div>`).join('');
+  }
 }
 
 function renderRadar(cands, ceil, thresh) {
   const body=document.getElementById('radar-body');
-  if (!cands.length) {
-    body.innerHTML='<div class="empty"><div class="empty-icon">◎</div>Scanning...</div>';
-    return;
-  }
-  const rows=cands.map(c => {
-    const g   = thresh-c.score;
-    const pct = Math.min(c.score,100);
-    const es  = c.edge_pct>0?'+':'';
-    const ecls= c.edge_pct>0?'edge-pos':'edge-neg';
-    const dir = c.direction==='above'?'<span class="dir-up">↑ Above</span>':'<span class="dir-dn">↓ Below</span>';
-    const gcls= g<=0?'gap-pass':g<=5?'gap-close':g<=12?'gap-mid':'gap-far';
-    const gtxt= g<=0?'✓ Geçti':g.toFixed(0)+' pts away';
-    const fcls= pct>=60?'hi':pct<30?'lo':'';
+  if (!cands.length) { body.innerHTML='<div class="empty"><span class="empty-icon">◎</span>Scanning...</div>'; return; }
+  const rows=cands.map(c=>{
+    const g=thresh-c.score, pct=Math.min(c.score,100);
+    const gcls=g<=0?'passed':g<=5?'close':g<=12?'mid':'far';
+    const gtxt=g<=0?'PASSED':g.toFixed(0)+' pts away';
+    const es=c.edge_pct>0?'+':'', ecls=c.edge_pct>0?'edge-pos':'edge-neg';
+    const dir=c.direction==='above'?'<span class="dir-up">↑ Above</span>':'<span class="dir-dn">↓ Below</span>';
     return `<tr>
       <td class="tq">${c.question}<small>$${Number(c.target||0).toLocaleString()} · ${dir}</small></td>
-      <td><div class="bwrap">
-        <div class="bbg"><div class="bfill ${fcls}" style="width:${pct}%"></div></div>
-        <span class="bnum">${c.score}/100</span>
-      </div></td>
+      <td><div class="bwrap"><div class="bbg"><div class="bfill ${pct>=60?'hi':pct<30?'lo':''}" style="width:${pct}%"></div></div><span class="bnum">${c.score}/100</span></div></td>
       <td class="${ecls}">${es}${(c.edge_pct||0).toFixed(1)}%</td>
-      <td><span class="badge ${gcls}">${gtxt}</span></td>
-      <td style="color:var(--sub);font-family:var(--mono);font-size:12px">${c.hours_left||0}s</td>
+      <td><span class="gtag ${gcls}">${gtxt}</span></td>
+      <td style="color:var(--dim);font-family:var(--mono);font-size:11px">${c.hours_left||0}h</td>
     </tr>`;
   }).join('');
-  body.innerHTML=`<table>
-    <thead><tr><th>Market</th><th>Score</th><th>Edge</th><th>Distance to Threshold</th><th>Time left</th></tr></thead>
-    <tbody>${rows}</tbody>
-  </table>`;
+  body.innerHTML=`<table><thead><tr><th>Market</th><th>Score</th><th>Edge</th><th>Distance</th><th>Time</th></tr></thead><tbody>${rows}</tbody></table>`;
 }
 
 function renderOpps(opps) {
   $('opp-total', opps.length);
   const body=document.getElementById('opp-body');
-  if (!opps.length) {
-    body.innerHTML='<div class="empty"><div class="empty-icon">◈</div>No opportunities found yet</div>';
-    return;
-  }
-  const rows=[...opps].sort((a,b)=>b.score-a.score).map(o => {
-    const es  = o.edge_pct>0?'+':'';
-    const ecls= o.edge_pct>0?'edge-pos':'edge-neg';
-    const ac  = o.action?.includes('YES')?'action-yes':o.action?.includes('NO')?'action-no':'action-wait';
-    const dir = o.direction==='above'?'<span class="dir-up">↑ Above</span>':'<span class="dir-dn">↓ Below</span>';
-    const ug  = o.urgent?'<span class="urgent-tag">URGENT</span>':'';
-    const pct = Math.min(o.score,100);
+  if (!opps.length) { body.innerHTML='<div class="empty"><span class="empty-icon">◈</span>No opportunities found yet</div>'; return; }
+  const rows=[...opps].sort((a,b)=>b.score-a.score).map(o=>{
+    const es=o.edge_pct>0?'+':'', ecls=o.edge_pct>0?'edge-pos':'edge-neg';
+    const ac=o.action?.includes('YES')?'action-yes':o.action?.includes('NO')?'action-no':'action-wait';
+    const dir=o.direction==='above'?'<span class="dir-up">↑ Above</span>':'<span class="dir-dn">↓ Below</span>';
+    const ug=o.urgent?'<span class="urgent-tag">URGENT</span>':'';
+    const pct=Math.min(o.score,100);
     return `<tr>
       <td class="tq">${o.question||'—'}${ug}<small>$${Number(o.target||0).toLocaleString()} · ${dir}</small></td>
-      <td style="font-size:12px;font-family:var(--mono)">
-        <div>PİY ${o.market_prob||0}%</div>
-        <div style="color:var(--blue)">MOD ${o.expected_prob||0}%</div>
-      </td>
+      <td style="font-family:var(--mono);font-size:11px"><div style="color:var(--sub)">MKT ${o.market_prob||0}%</div><div style="color:var(--accent2)">MOD ${o.expected_prob||0}%</div></td>
       <td class="${ecls}">${es}${(o.edge_pct||0).toFixed(1)}%</td>
-      <td><div class="bwrap">
-        <div class="bbg"><div class="bfill hi" style="width:${pct}%"></div></div>
-        <span class="bnum">${o.score}/100</span>
-      </div></td>
+      <td><div class="bwrap"><div class="bbg"><div class="bfill hi" style="width:${pct}%"></div></div><span class="bnum">${o.score}/100</span></div></td>
       <td class="${ac}">${o.action||'—'}</td>
-      <td style="color:var(--sub);font-family:var(--mono);font-size:12px">${o.hours_left||0}s</td>
+      <td style="color:var(--dim);font-family:var(--mono);font-size:11px">${o.hours_left||0}h</td>
     </tr>`;
   }).join('');
-  body.innerHTML=`<table>
-    <thead><tr><th>Question</th><th>Probability</th><th>Edge</th><th>Score</th><th>Signal</th><th>Time left</th></tr></thead>
-    <tbody>${rows}</tbody>
-  </table>`;
+  body.innerHTML=`<table><thead><tr><th>Question</th><th>Probability</th><th>Edge</th><th>Score</th><th>Signal</th><th>Time</th></tr></thead><tbody>${rows}</tbody></table>`;
 }
 
-function $(id,val){ const e=document.getElementById(id); if(e) e.textContent=val; }
+function $(id,val){const e=document.getElementById(id);if(e)e.textContent=val;}
 
 window.addEventListener('resize', drawChart);
 drawChart();
