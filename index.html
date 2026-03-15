@@ -321,6 +321,31 @@ tr:hover td { background: rgba(255,255,255,0.02); }
 /* Fade in */
 .fade { animation: fadeUp .5s ease both; }
 @keyframes fadeUp { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+
+/* ── P&L PANELİ ── */
+.pnl-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 10px; margin-bottom: 16px; }
+.pnl-stat { background: var(--bg3); border-radius: 10px; padding: 12px 14px; }
+.pnl-val  { font-size: 22px; font-weight: 600; font-family: var(--mono); line-height: 1; margin-bottom: 3px; }
+.pnl-val.pos { color: var(--green); }
+.pnl-val.neg { color: var(--red); }
+.pnl-val.neu { color: var(--text); }
+.pnl-lbl  { font-size: 10px; color: var(--sub); letter-spacing: 1px; }
+
+.pos-table-wrap { overflow-x: auto; }
+.pos-tag {
+  display: inline-flex; padding: 2px 7px; border-radius: 5px;
+  font-size: 10px; font-family: var(--mono); font-weight: 600;
+}
+.pos-tag.open   { background: rgba(124,106,247,0.15); color: var(--accent2); }
+.pos-tag.target { background: rgba(52,211,153,0.15);  color: var(--green); }
+.pos-tag.stop   { background: rgba(248,113,113,0.15); color: var(--red); }
+.pos-tag.closed-win  { background: rgba(52,211,153,0.15); color: var(--green); }
+.pos-tag.closed-loss { background: rgba(248,113,113,0.15); color: var(--red); }
+
+.pos-bar-wrap { display: flex; align-items: center; gap: 6px; min-width: 100px; }
+.pos-bar-bg   { flex: 1; height: 3px; background: var(--bg3); border-radius: 99px; overflow: hidden; }
+.pos-bar-fill { height: 100%; border-radius: 99px; transition: width .5s ease; }
+
 .fade-2 { animation-delay: .08s; }
 .fade-3 { animation-delay: .16s; }
 .fade-4 { animation-delay: .24s; }
@@ -451,6 +476,49 @@ tr:hover td { background: rgba(255,255,255,0.02); }
       </div>
     </div>
 
+  </div>
+
+  <!-- P&L PANELİ -->
+  <div class="card fade fade-3" style="margin-bottom:20px;padding:24px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+      <div style="font-size:13px;font-weight:500;color:var(--text)">
+        <span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--accent);margin-right:8px;animation:glow 2s ease-in-out infinite"></span>
+        R:R Position Tracker
+      </div>
+      <div style="font-size:11px;color:var(--sub);font-family:var(--mono)">
+        Open: <span id="pnl-open-count" style="color:var(--accent2)">0</span> &nbsp;·&nbsp;
+        Closed: <span id="pnl-closed-count" style="color:var(--sub)">0</span>
+      </div>
+    </div>
+
+    <div class="pnl-grid">
+      <div class="pnl-stat">
+        <div class="pnl-val neu" id="pnl-total-pnl">—</div>
+        <div class="pnl-lbl">TOTAL P&L</div>
+      </div>
+      <div class="pnl-stat">
+        <div class="pnl-val neu" id="pnl-winrate">—</div>
+        <div class="pnl-lbl">WIN RATE</div>
+      </div>
+      <div class="pnl-stat">
+        <div class="pnl-val pos" id="pnl-avg-win">—</div>
+        <div class="pnl-lbl">AVG WIN</div>
+      </div>
+      <div class="pnl-stat">
+        <div class="pnl-val neg" id="pnl-avg-loss">—</div>
+        <div class="pnl-lbl">AVG LOSS</div>
+      </div>
+    </div>
+
+    <div style="font-size:11px;color:var(--sub);letter-spacing:1.5px;margin-bottom:10px;font-family:var(--mono)">OPEN POSITIONS</div>
+    <div id="pnl-open-body" style="margin-bottom:20px">
+      <div style="font-size:12px;color:var(--dim);font-family:var(--mono);padding:8px 0">No open positions</div>
+    </div>
+
+    <div style="font-size:11px;color:var(--sub);letter-spacing:1.5px;margin-bottom:10px;font-family:var(--mono)">RECENT CLOSED</div>
+    <div id="pnl-closed-body">
+      <div style="font-size:12px;color:var(--dim);font-family:var(--mono);padding:8px 0">No closed positions yet</div>
+    </div>
   </div>
 
   <!-- WIN RATE ROW -->
@@ -587,6 +655,92 @@ function tickChart(p) {
   chartData.shift();
   chartData.push(p+(Math.random()-.5)*p*.0001);
   drawChart();
+}
+
+
+// ── P&L TRACKER ──────────────────────────
+function updatePnL(d) {
+  const stats   = d.pnl_stats || {};
+  const open    = d.open_positions || [];
+  const closed  = d.closed_positions || [];
+
+  $('pnl-open-count',   open.length);
+  $('pnl-closed-count', stats.total || 0);
+
+  // Stats
+  const totalPnl = stats.total_pnl || 0;
+  const wins     = stats.wins  || 0;
+  const losses   = stats.losses || 0;
+  const total    = stats.total || 0;
+  const winrate  = total > 0 ? (wins/total*100).toFixed(1)+'%' : '—';
+
+  const pnlEl = document.getElementById('pnl-total-pnl');
+  if (pnlEl) {
+    pnlEl.textContent = totalPnl !== 0 ? (totalPnl>0?'+':'')+totalPnl.toFixed(2)+'%' : '—';
+    pnlEl.className = 'pnl-val '+(totalPnl>0?'pos':totalPnl<0?'neg':'neu');
+  }
+  const wrEl = document.getElementById('pnl-winrate');
+  if (wrEl) {
+    wrEl.textContent = winrate;
+    wrEl.className = 'pnl-val '+(total===0?'neu':parseFloat(winrate)>=60?'pos':parseFloat(winrate)>=40?'neu':'neg');
+  }
+  $('pnl-avg-win',  stats.avg_win  ? '+'+stats.avg_win.toFixed(2)+'%'  : '—');
+  $('pnl-avg-loss', stats.avg_loss ? stats.avg_loss.toFixed(2)+'%'  : '—');
+
+  // Open positions
+  const openEl = document.getElementById('pnl-open-body');
+  if (openEl) {
+    if (!open.length) {
+      openEl.innerHTML = '<div style="font-size:12px;color:var(--dim);font-family:var(--mono);padding:8px 0">No open positions</div>';
+    } else {
+      openEl.innerHTML = `<table style="width:100%;border-collapse:collapse">
+        <thead><tr>
+          <th style="padding:7px 0;text-align:left;font-size:10px;color:var(--dim);border-bottom:1px solid var(--border);letter-spacing:1.5px;font-family:var(--mono)">QUESTION</th>
+          <th style="padding:7px 0;text-align:right;font-size:10px;color:var(--dim);border-bottom:1px solid var(--border);letter-spacing:1.5px;font-family:var(--mono)">ENTRY</th>
+          <th style="padding:7px 0;text-align:right;font-size:10px;color:var(--dim);border-bottom:1px solid var(--border);letter-spacing:1.5px;font-family:var(--mono)">TARGET</th>
+          <th style="padding:7px 0;text-align:right;font-size:10px;color:var(--dim);border-bottom:1px solid var(--border);letter-spacing:1.5px;font-family:var(--mono)">STOP</th>
+          <th style="padding:7px 0;text-align:right;font-size:10px;color:var(--dim);border-bottom:1px solid var(--border);letter-spacing:1.5px;font-family:var(--mono)">UNREAL P&L</th>
+          <th style="padding:7px 0;text-align:right;font-size:10px;color:var(--dim);border-bottom:1px solid var(--border);letter-spacing:1.5px;font-family:var(--mono)">R:R</th>
+        </tr></thead>
+        <tbody>${open.map(p => {
+          const pnl = p.unrealized_pnl || 0;
+          const pnlCls = pnl>0?'color:var(--green)':pnl<0?'color:var(--red)':'color:var(--sub)';
+          const progress = Math.max(0, Math.min(100,
+            (p.current_price - p.entry) / (p.target - p.entry) * 100
+          ));
+          return `<tr style="border-bottom:1px solid var(--border)">
+            <td style="padding:10px 0;font-size:11px;color:var(--text);max-width:240px">${p.question}<br>
+              <span style="font-size:10px;color:var(--sub);font-family:var(--mono)">${p.action} · ${p.opened_at.slice(11,16)}</span>
+            </td>
+            <td style="padding:10px 0;text-align:right;font-family:var(--mono);font-size:11px">${p.entry.toFixed(4)}</td>
+            <td style="padding:10px 0;text-align:right;font-family:var(--mono);font-size:11px;color:var(--green)">${p.target.toFixed(4)}</td>
+            <td style="padding:10px 0;text-align:right;font-family:var(--mono);font-size:11px;color:var(--red)">${p.stop.toFixed(4)}</td>
+            <td style="padding:10px 0;text-align:right;font-family:var(--mono);font-size:12px;font-weight:500;${pnlCls}">${pnl>0?'+':''}${pnl.toFixed(2)}%</td>
+            <td style="padding:10px 0;text-align:right;font-family:var(--mono);font-size:11px;color:var(--sub)">${p.rr}x</td>
+          </tr>`;
+        }).join('')}</tbody>
+      </table>`;
+    }
+  }
+
+  // Closed positions
+  const closedEl = document.getElementById('pnl-closed-body');
+  if (closedEl) {
+    if (!closed.length) {
+      closedEl.innerHTML = '<div style="font-size:12px;color:var(--dim);font-family:var(--mono);padding:8px 0">No closed positions yet</div>';
+    } else {
+      closedEl.innerHTML = [...closed].reverse().map(p => {
+        const win = p.win;
+        const pnl = p.pnl_pct || 0;
+        return `<div style="display:flex;align-items:center;gap:12px;padding:8px 0;border-bottom:1px solid var(--border)">
+          <div style="width:7px;height:7px;border-radius:50%;background:${win?'var(--green)':'var(--red)'};flex-shrink:0"></div>
+          <div style="flex:1;font-size:11px;color:var(--text)">${p.question.slice(0,45)}</div>
+          <div style="font-size:10px;color:var(--sub);font-family:var(--mono)">${p.reason}</div>
+          <div style="font-size:12px;font-weight:500;font-family:var(--mono);${win?'color:var(--green)':'color:var(--red)'}">${pnl>0?'+':''}${pnl.toFixed(2)}%</div>
+        </div>`;
+      }).join('');
+    }
+  }
 }
 
 // ── FETCH ──
