@@ -929,7 +929,11 @@ function renderOpps(opps) {
 
     return `<tr>
       <td class="tq">${o.question||'—'}${ug}${mo}<small>$${Number(o.target||0).toLocaleString()} · ${dir}</small></td>
-      <td style="font-family:var(--mono);font-size:11px"><div style="color:var(--sub)">MKT ${o.market_prob||0}%</div><div style="color:var(--accent2)">MOD ${o.expected_prob||0}%</div></td>
+      <td style="font-family:var(--mono);font-size:11px">
+        <div style="color:var(--sub)">MKT ${o.market_prob||0}%</div>
+        <div style="color:var(--accent2)">MOD ${o.expected_prob||0}%</div>
+        <div style="color:var(--dim);font-size:10px">VOL ${o.volume_24h ? (o.volume_24h >= 1000000 ? (o.volume_24h/1000000).toFixed(1)+'M' : o.volume_24h >= 1000 ? (o.volume_24h/1000).toFixed(0)+'K' : o.volume_24h) : '—'}</div>
+      </td>
       <td>${edgeDisplay}</td>
       <td><div class="bwrap"><div class="bbg"><div class="bfill hi" style="width:${pct}%"></div></div><span class="bnum">${o.score}/100</span></div></td>
       <td class="${ac}">${o.action||'—'}</td>
