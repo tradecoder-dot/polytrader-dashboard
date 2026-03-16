@@ -914,6 +914,7 @@ function renderOpps(opps) {
     const ac=o.action?.includes('YES')?'action-yes':o.action?.includes('NO')?'action-no':'action-wait';
     const dir=o.direction==='above'?'<span class="dir-up">↑ Above</span>':'<span class="dir-dn">↓ Below</span>';
     const ug=o.urgent?'<span class="urgent-tag">URGENT</span>':'';
+    const mo=o.is_multi_outcome?'<span style="display:inline-flex;padding:1px 6px;border-radius:4px;background:rgba(251,191,36,0.15);color:var(--yellow);font-size:9px;font-weight:600;margin-left:6px;font-family:var(--mono)">MULTI</span>':'';
     const pct=Math.min(o.score,100);
 
     // Fix 6: Anlık edge — sinyal anı edge'i + güncel piyasa prob'u
@@ -927,7 +928,7 @@ function renderOpps(opps) {
       : `<div class="${ecls}">${es}${(o.edge_pct||0).toFixed(1)}%</div>`;
 
     return `<tr>
-      <td class="tq">${o.question||'—'}${ug}<small>$${Number(o.target||0).toLocaleString()} · ${dir}</small></td>
+      <td class="tq">${o.question||'—'}${ug}${mo}<small>$${Number(o.target||0).toLocaleString()} · ${dir}</small></td>
       <td style="font-family:var(--mono);font-size:11px"><div style="color:var(--sub)">MKT ${o.market_prob||0}%</div><div style="color:var(--accent2)">MOD ${o.expected_prob||0}%</div></td>
       <td>${edgeDisplay}</td>
       <td><div class="bwrap"><div class="bbg"><div class="bfill hi" style="width:${pct}%"></div></div><span class="bnum">${o.score}/100</span></div></td>
