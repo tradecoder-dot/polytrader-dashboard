@@ -933,6 +933,7 @@ function renderOpps(opps) {
     const ac=o.action?.includes('YES')?'action-yes':o.action?.includes('NO')?'action-no':'action-wait';
     const dir=o.direction==='above'?'<span class="dir-up">↑ Above</span>':'<span class="dir-dn">↓ Below</span>';
     const ug=o.urgent?'<span class="urgent-tag">URGENT</span>':'';
+    const multi=o.is_multi_outcome?'<span style="display:inline-flex;padding:2px 6px;border-radius:4px;background:rgba(251,191,36,0.15);color:var(--yellow);font-size:9px;font-family:var(--mono);font-weight:600;margin-left:6px">MULTI</span>':'';
     const pct=Math.min(o.score,100);
 
     // Live edge — üstü çizili eski, yeşil/kırmızı live
@@ -953,7 +954,7 @@ function renderOpps(opps) {
                  : '—';
 
     return `<tr>
-      <td class="tq">${o.question||'—'}${ug}<small>$${Number(o.target||0).toLocaleString()} · ${dir}</small></td>
+      <td class="tq">${o.question||'—'}${ug}${multi}<small>$${Number(o.target||0).toLocaleString()} · ${dir}</small></td>
       <td style="font-family:var(--mono);font-size:11px">
         <div style="color:var(--sub)">MKT ${o.market_prob||0}%</div>
         <div style="color:var(--accent2)">MOD ${o.expected_prob||0}%</div>
