@@ -697,26 +697,28 @@ function updatePnL(d) {
         <thead><tr>
           <th style="padding:7px 0;text-align:left;font-size:10px;color:var(--dim);border-bottom:1px solid var(--border);letter-spacing:1.5px;font-family:var(--mono)">QUESTION</th>
           <th style="padding:7px 0;text-align:right;font-size:10px;color:var(--dim);border-bottom:1px solid var(--border);letter-spacing:1.5px;font-family:var(--mono)">ENTRY</th>
-          <th style="padding:7px 0;text-align:right;font-size:10px;color:var(--dim);border-bottom:1px solid var(--border);letter-spacing:1.5px;font-family:var(--mono)">TARGET</th>
-          <th style="padding:7px 0;text-align:right;font-size:10px;color:var(--dim);border-bottom:1px solid var(--border);letter-spacing:1.5px;font-family:var(--mono)">STOP</th>
+          <th style="padding:7px 0;text-align:right;font-size:10px;color:var(--dim);border-bottom:1px solid var(--border);letter-spacing:1.5px;font-family:var(--mono)">ENTRY EDGE</th>
+          <th style="padding:7px 0;text-align:right;font-size:10px;color:var(--dim);border-bottom:1px solid var(--border);letter-spacing:1.5px;font-family:var(--mono)">CURR EDGE</th>
+          <th style="padding:7px 0;text-align:right;font-size:10px;color:var(--dim);border-bottom:1px solid var(--border);letter-spacing:1.5px;font-family:var(--mono)">EV EXIT</th>
           <th style="padding:7px 0;text-align:right;font-size:10px;color:var(--dim);border-bottom:1px solid var(--border);letter-spacing:1.5px;font-family:var(--mono)">UNREAL P&L</th>
-          <th style="padding:7px 0;text-align:right;font-size:10px;color:var(--dim);border-bottom:1px solid var(--border);letter-spacing:1.5px;font-family:var(--mono)">R:R</th>
         </tr></thead>
         <tbody>${open.map(p => {
           const pnl = p.unrealized_pnl || 0;
           const pnlCls = pnl>0?'color:var(--green)':pnl<0?'color:var(--red)':'color:var(--sub)';
-          const progress = Math.max(0, Math.min(100,
-            (p.current_price - p.entry) / (p.target - p.entry) * 100
-          ));
+          const entryEdge = p.entry_edge || 0;
+          const currEdge  = p.current_edge || 0;
+          const evExit    = p.ev_exit_threshold || (entryEdge * 0.3);
+          const edgeEroding = currEdge < entryEdge * 0.6;
+          const edgeCls = edgeEroding ? 'color:var(--yellow)' : 'color:var(--green)';
           return `<tr style="border-bottom:1px solid var(--border)">
             <td style="padding:10px 0;font-size:11px;color:var(--text);max-width:240px">${p.question}<br>
-              <span style="font-size:10px;color:var(--sub);font-family:var(--mono)">${p.action} · ${p.opened_at.slice(11,16)}</span>
+              <span style="font-size:10px;color:var(--sub);font-family:var(--mono)">${p.action} · ${(p.opened_at||'').slice(11,16)}</span>
             </td>
-            <td style="padding:10px 0;text-align:right;font-family:var(--mono);font-size:11px">${p.entry.toFixed(4)}</td>
-            <td style="padding:10px 0;text-align:right;font-family:var(--mono);font-size:11px;color:var(--green)">${p.target.toFixed(4)}</td>
-            <td style="padding:10px 0;text-align:right;font-family:var(--mono);font-size:11px;color:var(--red)">${p.stop.toFixed(4)}</td>
+            <td style="padding:10px 0;text-align:right;font-family:var(--mono);font-size:11px">${(p.entry||0).toFixed(4)}</td>
+            <td style="padding:10px 0;text-align:right;font-family:var(--mono);font-size:11px;color:var(--sub)">${entryEdge.toFixed(1)}%</td>
+            <td style="padding:10px 0;text-align:right;font-family:var(--mono);font-size:11px;${edgeCls}">${currEdge.toFixed(1)}%</td>
+            <td style="padding:10px 0;text-align:right;font-family:var(--mono);font-size:11px;color:var(--dim)">&lt;${evExit.toFixed(1)}%</td>
             <td style="padding:10px 0;text-align:right;font-family:var(--mono);font-size:12px;font-weight:500;${pnlCls}">${pnl>0?'+':''}${pnl.toFixed(2)}%</td>
-            <td style="padding:10px 0;text-align:right;font-family:var(--mono);font-size:11px;color:var(--sub)">${p.rr}x</td>
           </tr>`;
         }).join('')}</tbody>
       </table>`;
@@ -744,101 +746,125 @@ function updatePnL(d) {
 }
 
 // ── FETCH ──
+let _isFetching = false;
+
 async function fetchData() {
   if (!BTC_BIN_ID||!JSONBIN_KEY) { $('hdr-time','BIN ID / KEY MISSING'); return; }
+  if (_isFetching) return; // Rate limit: duplicate isteği engelle
+  _isFetching = true;
   try {
     const r = await fetch(`https://api.jsonbin.io/v3/b/${BTC_BIN_ID}/latest`,
       {headers:{'X-Master-Key':JSONBIN_KEY}});
     if (!r.ok) throw new Error(r.status);
     update((await r.json()).record);
   } catch(e) { $('hdr-time','Error: '+e.message); }
+  finally { _isFetching = false; }
 }
 
 let prevThresh = null;
 
 function update(d) {
   if (!d) return;
-  const price  = d.btc_price || 0;
-  const chg    = d.btc_change_pct || 0;
-  const src    = d.btc_source || '—';
-  const scans  = d.total_scans || 0;
-  const skips  = d.total_skips || 0;
-  const thresh = d.active_threshold || 35;
-  const opps   = (d.opportunities||[]).length;
-  const ceil   = d.market_ceiling || null;
-  const upd    = d.last_update || '';
-  const c      = d.calib || {};
-  const ps     = d.prediction_stats || {};
+  try {
+    const price  = d.btc_price || 0;
+    const chg    = d.btc_change_pct || 0;
+    const src    = d.btc_source || '—';
+    const scans  = d.total_scans || 0;
+    const skips  = d.total_skips || 0;
+    const thresh = d.active_threshold || 35;
+    const opps   = (d.opportunities||[]).length;
+    const ceil   = d.market_ceiling || null;
+    const upd    = d.last_update || '';
+    const c      = d.calib || {};
+    const ps     = d.prediction_stats || {};
 
-  // Header
-  const now = new Date();
-  $('hdr-time', upd ? upd.slice(11,19)+' UTC' : now.toTimeString().slice(0,8)+' UTC');
+    // Header
+    const now = new Date();
+    $('hdr-time', upd ? upd.slice(11,19)+' UTC' : now.toTimeString().slice(0,8)+' UTC');
 
-  // BTC
-  if (price > 0) {
-    $('p-price', '$'+Math.round(price).toLocaleString());
-    $('chart-price', '$'+Math.round(price).toLocaleString());
-    const chgEl = document.getElementById('p-chg');
-    chgEl.textContent = (chg>=0?'▲ +':'▼ ')+chg.toFixed(2)+'%';
-    chgEl.className = 'btc-badge '+(chg>=0?'up':'down');
-    $('p-src', src); $('chart-src', 'Source: '+src);
-    if (d.btc_high_24h && d.btc_low_24h)
-      $('p-hl','H $'+Math.round(d.btc_high_24h).toLocaleString()+'  ·  L $'+Math.round(d.btc_low_24h).toLocaleString());
-    if (d.btc_high_24h) $('chart-hl','H $'+Math.round(d.btc_high_24h).toLocaleString()+' · L $'+Math.round(d.btc_low_24h).toLocaleString());
-    if (!lastPrice) initChart(price);
-    lastPrice = price; tickChart(price);
+    // BTC
+    if (price > 0) {
+      try {
+        $('p-price', '$'+Math.round(price).toLocaleString());
+        $('chart-price', '$'+Math.round(price).toLocaleString());
+        const chgEl = document.getElementById('p-chg');
+        chgEl.textContent = (chg>=0?'▲ +':'▼ ')+chg.toFixed(2)+'%';
+        chgEl.className = 'btc-badge '+(chg>=0?'up':'down');
+        $('p-src', src); $('chart-src', 'Source: '+src);
+        if (d.btc_high_24h && d.btc_low_24h)
+          $('p-hl','H $'+Math.round(d.btc_high_24h).toLocaleString()+'  ·  L $'+Math.round(d.btc_low_24h).toLocaleString());
+        if (d.btc_high_24h) $('chart-hl','H $'+Math.round(d.btc_high_24h).toLocaleString()+' · L $'+Math.round(d.btc_low_24h).toLocaleString());
+        if (!lastPrice) initChart(price);
+        lastPrice = price; tickChart(price);
+      } catch(e) { console.warn('BTC render error:', e); }
+    }
+
+    // Stats
+    try {
+      $('s-scans',  scans.toLocaleString());
+      $('s-skips',  skips+' skipped');
+      $('s-opps',   d.total_opportunities||opps);
+      $('s-thresh', typeof thresh==='number'?thresh.toFixed(1):thresh);
+      $('s-pending', (ps.pending||0)+' pending');
+    } catch(e) { console.warn('Stats render error:', e); }
+
+    // Threshold
+    try {
+      const tMin=d.threshold_min||20, tMax=d.threshold_max||60;
+      $('th-val', typeof thresh==='number'?thresh.toFixed(1):thresh);
+      document.getElementById('th-bar').style.width=((thresh-tMin)/(tMax-tMin)*100)+'%';
+      $('th-min', tMin+' — aggressive'); $('th-max', tMax+' — conservative');
+    } catch(e) { console.warn('Threshold render error:', e); }
+
+    // Calib
+    try {
+      const move   = d.btc_move_1h||c.avg_volatility||0;
+      const score  = c.avg_score||0;
+      const spread = c.avg_spread||0;
+      const urgent = c.avg_urgent||0;
+      const samples= c.vol_samples||0;
+      setBar('vol',    Math.max(move/2*100,2),    move<.01?'Collecting':move.toFixed(3)+'%', move>1.5?'hi':move<.3?'lo':'');
+      setBar('qual',   score,                      score<1?'No data':score.toFixed(0)+'/100', score>60?'hi':score<35?'lo':'');
+      setBar('spread', Math.min(spread/5*100,100), spread<.001?'—':spread.toFixed(2)+'%', spread>3?'lo':'');
+      setBar('urgent', Math.min(urgent/3*100,100), urgent<.1?'None':urgent.toFixed(1)+' active', urgent>1?'hi':'lo');
+      if (ceil) setBar('ceil', Math.min(ceil,100), ceil.toFixed(1)+'/100', '');
+      if (prevThresh!==null && prevThresh!==thresh) {
+        const diff=(thresh-prevThresh).toFixed(1);
+        $('cf-last', prevThresh.toFixed(1)+' → '+thresh.toFixed(1)+' ('+(diff>0?'+':'')+diff+')');
+      }
+      prevThresh = thresh;
+      const next = 30-(samples%30)||30;
+      $('cf-next', next+' scans away');
+    } catch(e) { console.warn('Calib render error:', e); }
+
+    // P&L
+    try { updatePnL(d); } catch(e) { console.warn('PnL render error:', e); }
+
+    // Win Rate
+    try { updateWinRate(ps); } catch(e) { console.warn('WinRate render error:', e); }
+
+    // Radar
+    try {
+      $('rd-ceil',   ceil?ceil.toFixed(1)+'/100':'—');
+      $('rd-thresh', thresh?thresh.toFixed(1)+'/100':'—');
+      $('rd-gap',    ceil&&thresh?(thresh-ceil).toFixed(1)+' pts':'—');
+      renderRadar(d.radar||[], ceil, thresh);
+    } catch(e) { console.warn('Radar render error:', e); }
+
+    // Opps
+    try { renderOpps(d.opportunities||[]); } catch(e) { console.warn('Opps render error:', e); }
+
+    // Statusbar
+    try {
+      $('sbt',       upd?upd.slice(11,19)+' UTC':'—');
+      $('sb-scans',  scans); $('sb-skips', skips);
+      $('sb-opps',   opps); $('sb-thresh', thresh);
+    } catch(e) { console.warn('Statusbar render error:', e); }
+
+  } catch(e) {
+    console.error('update() fatal error:', e);
+    $('hdr-time', 'Render error');
   }
-
-  // Stats
-  $('s-scans',  scans.toLocaleString());
-  $('s-skips',  skips+' skipped');
-  $('s-opps',   d.total_opportunities||opps);
-  $('s-thresh', typeof thresh==='number'?thresh.toFixed(1):thresh);
-  $('s-pending', (ps.pending||0)+' pending');
-
-  // Threshold
-  const tMin=d.threshold_min||20, tMax=d.threshold_max||60;
-  $('th-val', typeof thresh==='number'?thresh.toFixed(1):thresh);
-  document.getElementById('th-bar').style.width=((thresh-tMin)/(tMax-tMin)*100)+'%';
-  $('th-min', tMin+' — aggressive'); $('th-max', tMax+' — conservative');
-
-  // Calib
-  const move   = d.btc_move_1h||c.avg_volatility||0;
-  const score  = c.avg_score||0;
-  const spread = c.avg_spread||0;
-  const urgent = c.avg_urgent||0;
-  const samples= c.vol_samples||0;
-
-  setBar('vol',    Math.max(move/2*100,2),    move<.01?'Collecting':move.toFixed(3)+'%', move>1.5?'hi':move<.3?'lo':'');
-  setBar('qual',   score,                      score<1?'No data':score.toFixed(0)+'/100', score>60?'hi':score<35?'lo':'');
-  setBar('spread', Math.min(spread/5*100,100), spread<.001?'—':spread.toFixed(2)+'%', spread>3?'lo':'');
-  setBar('urgent', Math.min(urgent/3*100,100), urgent<.1?'None':urgent.toFixed(1)+' active', urgent>1?'hi':'lo');
-  if (ceil) setBar('ceil', Math.min(ceil,100), ceil.toFixed(1)+'/100', '');
-
-  if (prevThresh!==null && prevThresh!==thresh) {
-    const diff=(thresh-prevThresh).toFixed(1);
-    $('cf-last', prevThresh.toFixed(1)+' → '+thresh.toFixed(1)+' ('+(diff>0?'+':'')+diff+')');
-  }
-  prevThresh = thresh;
-  const next = 30-(samples%30)||30;
-  $('cf-next', next+' scans away');
-
-  // Win Rate
-  updateWinRate(ps);
-
-  // Radar
-  $('rd-ceil',   ceil?ceil.toFixed(1)+'/100':'—');
-  $('rd-thresh', thresh?thresh.toFixed(1)+'/100':'—');
-  $('rd-gap',    ceil&&thresh?(thresh-ceil).toFixed(1)+' pts':'—');
-  renderRadar(d.radar||[], ceil, thresh);
-
-  // Opps
-  renderOpps(d.opportunities||[]);
-
-  // Statusbar
-  $('sbt',       upd?upd.slice(11,19)+' UTC':'—');
-  $('sb-scans',  scans); $('sb-skips', skips);
-  $('sb-opps',   opps); $('sb-thresh', thresh);
 }
 
 function setBar(id, pct, val, cls) {
@@ -899,13 +925,6 @@ function renderRadar(cands, ceil, thresh) {
 }
 
 function renderOpps(opps) {
-  // Fix 5: Süresi dolmuş marketleri filtrele
-  const now = Date.now();
-  opps = opps.filter(o => {
-    if (!o.hours_left && o.hours_left !== 0) return true;
-    return o.hours_left > 0;
-  });
-
   $('opp-total', opps.length);
   const body=document.getElementById('opp-body');
   if (!opps.length) { body.innerHTML='<div class="empty"><span class="empty-icon">◈</span>No opportunities found yet</div>'; return; }
@@ -914,27 +933,11 @@ function renderOpps(opps) {
     const ac=o.action?.includes('YES')?'action-yes':o.action?.includes('NO')?'action-no':'action-wait';
     const dir=o.direction==='above'?'<span class="dir-up">↑ Above</span>':'<span class="dir-dn">↓ Below</span>';
     const ug=o.urgent?'<span class="urgent-tag">URGENT</span>':'';
-    const mo=o.is_multi_outcome?'<span style="display:inline-flex;padding:1px 6px;border-radius:4px;background:rgba(251,191,36,0.15);color:var(--yellow);font-size:9px;font-weight:600;margin-left:6px;font-family:var(--mono)">MULTI</span>':'';
     const pct=Math.min(o.score,100);
-
-    // Fix 6: Anlık edge — sinyal anı edge'i + güncel piyasa prob'u
-    const liveEdge = o.live_edge_pct !== undefined ? o.live_edge_pct : o.edge_pct;
-    const liveEs = liveEdge>0?'+':'';
-    const liveEcls = liveEdge>0?'color:var(--green)':'color:var(--red)';
-    const edgeChanged = o.live_edge_pct !== undefined && Math.abs(liveEdge - o.edge_pct) >= 1;
-    const edgeDisplay = edgeChanged
-      ? `<div class="${ecls}" style="font-size:10px;text-decoration:line-through">${es}${(o.edge_pct||0).toFixed(1)}%</div>
-         <div style="${liveEcls};font-size:12px;font-weight:500">${liveEs}${liveEdge.toFixed(1)}% <span style="color:var(--dim);font-size:9px">live</span></div>`
-      : `<div class="${ecls}">${es}${(o.edge_pct||0).toFixed(1)}%</div>`;
-
     return `<tr>
-      <td class="tq">${o.question||'—'}${ug}${mo}<small>$${Number(o.target||0).toLocaleString()} · ${dir}</small></td>
-      <td style="font-family:var(--mono);font-size:11px">
-        <div style="color:var(--sub)">MKT ${o.market_prob||0}%</div>
-        <div style="color:var(--accent2)">MOD ${o.expected_prob||0}%</div>
-        <div style="color:var(--dim);font-size:10px">VOL ${o.volume_24h ? (o.volume_24h >= 1000000 ? (o.volume_24h/1000000).toFixed(1)+'M' : o.volume_24h >= 1000 ? (o.volume_24h/1000).toFixed(0)+'K' : o.volume_24h) : '—'}</div>
-      </td>
-      <td>${edgeDisplay}</td>
+      <td class="tq">${o.question||'—'}${ug}<small>$${Number(o.target||0).toLocaleString()} · ${dir}</small></td>
+      <td style="font-family:var(--mono);font-size:11px"><div style="color:var(--sub)">MKT ${o.market_prob||0}%</div><div style="color:var(--accent2)">MOD ${o.expected_prob||0}%</div></td>
+      <td class="${ecls}">${es}${(o.edge_pct||0).toFixed(1)}%</td>
       <td><div class="bwrap"><div class="bbg"><div class="bfill hi" style="width:${pct}%"></div></div><span class="bnum">${o.score}/100</span></div></td>
       <td class="${ac}">${o.action||'—'}</td>
       <td style="color:var(--dim);font-family:var(--mono);font-size:11px">${o.hours_left||0}h</td>
