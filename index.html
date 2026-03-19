@@ -979,7 +979,8 @@ function update(d) {
     // Opps
     try { renderOpps(d.opportunities||[]); } catch(e) { console.warn('Opps render error:', e); }
 
-    // Statusbar
+    // Live Markets — _lastData'yı güncelle (SIG badge için)
+    window._lastData = d;
     try {
       $('sbt',       upd?upd.slice(11,19)+' UTC':'—');
       $('sb-scans',  scans); $('sb-skips', skips);
@@ -1096,17 +1097,16 @@ function renderOpps(opps) {
 
 function $(id,val){const e=document.getElementById(id);if(e)e.textContent=val;}
 
-// ── LIVE BTC MARKETS ──────────────────────────────────────────
-const GAMMA_API = 'https://gamma-api.polymarket.com';
+// ── LIVE BTC MARKETS — Polymarket API (CORS proxy) ───────────
+const PROXY = 'https://api.allorigins.win/raw?url=';
+const PM_URL = 'https://gamma-api.polymarket.com/markets?active=true&closed=false&limit=100&order=volume24hr&ascending=false';
 let _lmFetching = false;
 
 async function fetchLiveMarkets() {
   if (_lmFetching) return;
   _lmFetching = true;
   try {
-    const r = await fetch(`${GAMMA_API}/markets?active=true&closed=false&limit=50&order=volume24hr&ascending=false`, {
-      headers: { 'Accept': 'application/json' }
-    });
+    const r = await fetch(PROXY + encodeURIComponent(PM_URL));
     if (!r.ok) throw new Error(r.status);
     const markets = await r.json();
 
@@ -1114,8 +1114,7 @@ async function fetchLiveMarkets() {
     const btc = markets.filter(m => {
       const q = (m.question || '').toLowerCase();
       return (q.includes('bitcoin') || q.includes('btc')) &&
-             !q.includes('up or down') && !q.includes('between') &&
-             !q.includes('greater than') && !q.includes('less than');
+             !q.includes('up or down') && !q.includes('between');
     });
 
     $('lm-count', btc.length + ' markets');
@@ -1136,21 +1135,25 @@ function renderLiveMarkets(markets) {
     return;
   }
 
+  // Botun sinyal ürettiği marketleri işaretle
+  const oppQuestions = new Set(
+    (window._lastData?.opportunities || []).map(o => (o.question||'').slice(0,50))
+  );
+
   body.innerHTML = markets.map(m => {
     const q = m.question || '—';
+
     // YES fiyatı
-    let yesPrice = 0.5;
+    let yesPct = 50;
     try {
       const op = typeof m.outcomePrices === 'string' ? JSON.parse(m.outcomePrices) : m.outcomePrices;
-      if (op && op[0]) yesPrice = parseFloat(op[0]);
+      if (op && op[0]) yesPct = Math.round(parseFloat(op[0]) * 100);
     } catch(e) {
-      if (m.bestBid) yesPrice = parseFloat(m.bestBid);
+      if (m.bestBid) yesPct = Math.round(parseFloat(m.bestBid) * 100);
     }
-    const yesPct  = Math.round(yesPrice * 100);
-    const noPct   = 100 - yesPct;
 
     // Volume
-    const vol = m.volumeNum || m.volume || 0;
+    const vol = parseFloat(m.volumeNum || m.volume || m.volume24hr || 0);
     const volStr = vol >= 1e6 ? (vol/1e6).toFixed(1)+'M'
                  : vol >= 1e3 ? Math.round(vol/1e3)+'K' : '—';
 
@@ -1158,9 +1161,9 @@ function renderLiveMarkets(markets) {
     const ql = q.toLowerCase();
     const isBelow = ql.includes('below') || ql.includes('dip') || ql.includes('drop') || ql.includes('fall');
     const dirCls  = isBelow ? 'below' : 'above';
-    const dirTxt  = isBelow ? '↓ Below' : '↑ Above';
+    const dirTxt  = isBelow ? '↓' : '↑';
 
-    // YES bar rengi
+    // Renk
     const barColor = yesPct >= 70 ? 'var(--green)' : yesPct <= 30 ? 'var(--red)' : 'var(--accent)';
     const yesCls   = yesPct >= 70 ? 'color:var(--green)' : yesPct <= 30 ? 'color:var(--red)' : 'color:var(--accent2)';
 
@@ -1175,8 +1178,12 @@ function renderLiveMarkets(markets) {
               : Math.round(diff/24)+'d';
     }
 
+    // SIG badge — bot sinyal ürettiyse
+    const isSig = oppQuestions.has(q.slice(0,50));
+    const sigBadge = isSig ? '<span style="display:inline-flex;padding:1px 5px;border-radius:3px;background:rgba(124,106,247,0.2);color:var(--accent2);font-size:9px;font-family:var(--mono);margin-left:4px">SIG</span>' : '';
+
     return `<div class="lm-item">
-      <div class="lm-q">${q.slice(0,60)}${q.length>60?'…':''}</div>
+      <div class="lm-q">${q.slice(0,58)}${q.length>58?'…':''}${sigBadge}</div>
       <div class="lm-row">
         <span class="lm-yes" style="${yesCls}">${yesPct}¢</span>
         <div class="lm-bar-wrap">
@@ -1195,7 +1202,7 @@ drawChart();
 fetchData();
 fetchLiveMarkets();
 setInterval(fetchData, REFRESH_MS);
-setInterval(fetchLiveMarkets, 60000); // Her 1 dakikada bir markets güncelle
+setInterval(fetchLiveMarkets, 60000);
 </script>
 </body>
 </html>
