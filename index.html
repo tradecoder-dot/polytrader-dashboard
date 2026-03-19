@@ -1102,16 +1102,17 @@ function renderLiveMarkets(d) {
   const body = document.getElementById('lm-body');
   if (!body) return;
 
-  const radar = d.radar || [];
-  const opps  = d.opportunities || [];
+  const oppQuestions = new Set((d.opportunities||[]).map(o => (o.question||'').slice(0,50)));
 
-  // Soruya göre tekrarları kaldır, opps öncelikli
-  const seen = new Set();
-  const all  = [];
-  [...opps, ...radar].forEach(m => {
-    const q = (m.question || '').slice(0, 70);
-    if (!seen.has(q)) { seen.add(q); all.push(m); }
-  });
+  // all_markets varsa onu kullan, yoksa radar+opportunities fallback
+  let all = d.all_markets || [];
+  if (!all.length) {
+    const seen = new Set();
+    [...(d.opportunities||[]), ...(d.radar||[])].forEach(m => {
+      const q = (m.question||'').slice(0,70);
+      if (!seen.has(q)) { seen.add(q); all.push(m); }
+    });
+  }
 
   $('lm-count', all.length + ' markets');
 
@@ -1120,8 +1121,6 @@ function renderLiveMarkets(d) {
     return;
   }
 
-  const oppQuestions = new Set(opps.map(o => (o.question||'').slice(0,50)));
-
   body.innerHTML = all.map(m => {
     const q       = m.question || '—';
     const yesPct  = Math.round(m.market_prob || 50);
@@ -1129,8 +1128,6 @@ function renderLiveMarkets(d) {
     const volStr  = vol >= 1e6 ? (vol/1e6).toFixed(1)+'M'
                   : vol >= 1e3 ? Math.round(vol/1e3)+'K' : '—';
     const isBelow = m.direction === 'below';
-    const dirCls  = isBelow ? 'below' : 'above';
-    const dirTxt  = isBelow ? '↓' : '↑';
     const barColor= yesPct >= 70 ? 'var(--green)' : yesPct <= 30 ? 'var(--red)' : 'var(--accent)';
     const yesCls  = yesPct >= 70 ? 'color:var(--green)' : yesPct <= 30 ? 'color:var(--red)' : 'color:var(--accent2)';
     const hl      = m.hours_left || 0;
@@ -1153,8 +1150,8 @@ function renderLiveMarkets(d) {
           <div class="lm-bar-yes" style="width:${yesPct}%;background:${barColor}"></div>
         </div>
         ${edgeStr}
-        <span class="lm-vol">${volStr}</span>
-        <span class="lm-dir ${dirCls}">${dirTxt}</span>
+        <span style="font-size:10px;color:var(--dim);font-family:var(--mono)">${volStr}</span>
+        <span class="lm-dir ${isBelow?'below':'above'}">${isBelow?'↓':'↑'}</span>
         <span style="font-size:10px;color:var(--dim);font-family:var(--mono)">${timeStr}</span>
       </div>
     </div>`;
