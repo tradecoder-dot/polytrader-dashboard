@@ -979,8 +979,8 @@ function update(d) {
     // Opps
     try { renderOpps(d.opportunities||[]); } catch(e) { console.warn('Opps render error:', e); }
 
-    // Live Markets — _lastData'yı güncelle (SIG badge için)
-    window._lastData = d;
+    // Live Markets
+    try { renderLiveMarkets(d); } catch(e) { console.warn('LiveMarkets error:', e); }
     try {
       $('sbt',       upd?upd.slice(11,19)+' UTC':'—');
       $('sb-scans',  scans); $('sb-skips', skips);
@@ -1097,90 +1097,53 @@ function renderOpps(opps) {
 
 function $(id,val){const e=document.getElementById(id);if(e)e.textContent=val;}
 
-// ── LIVE BTC MARKETS — Polymarket API (CORS proxy) ───────────
-const PROXY = 'https://corsproxy.io/?';
-const PM_URL = 'https://gamma-api.polymarket.com/markets?active=true&closed=false&limit=100&order=volume24hr&ascending=false';
-let _lmFetching = false;
-
-async function fetchLiveMarkets() {
-  if (_lmFetching) return;
-  _lmFetching = true;
-  try {
-    const r = await fetch(PROXY + encodeURIComponent(PM_URL));
-    if (!r.ok) throw new Error(r.status);
-    const markets = await r.json();
-
-    // BTC filtresi
-    const btc = markets.filter(m => {
-      const q = (m.question || '').toLowerCase();
-      return (q.includes('bitcoin') || q.includes('btc')) &&
-             !q.includes('up or down') && !q.includes('between');
-    });
-
-    $('lm-count', btc.length + ' markets');
-    renderLiveMarkets(btc);
-  } catch(e) {
-    const b = document.getElementById('lm-body');
-    if (b) b.innerHTML = `<div class="lm-empty">Error: ${e.message}</div>`;
-  } finally {
-    _lmFetching = false;
-  }
-}
-
-function renderLiveMarkets(markets) {
+// ── LIVE BTC MARKETS — JSONBin'den gelir ─────────────────────
+function renderLiveMarkets(d) {
   const body = document.getElementById('lm-body');
   if (!body) return;
-  if (!markets.length) {
-    body.innerHTML = '<div class="lm-empty">No BTC markets found</div>';
+
+  const radar = d.radar || [];
+  const opps  = d.opportunities || [];
+
+  // Soruya göre tekrarları kaldır, opps öncelikli
+  const seen = new Set();
+  const all  = [];
+  [...opps, ...radar].forEach(m => {
+    const q = (m.question || '').slice(0, 70);
+    if (!seen.has(q)) { seen.add(q); all.push(m); }
+  });
+
+  $('lm-count', all.length + ' markets');
+
+  if (!all.length) {
+    body.innerHTML = '<div class="lm-empty">Bot henüz market analiz etmedi</div>';
     return;
   }
 
-  // Botun sinyal ürettiği marketleri işaretle
-  const oppQuestions = new Set(
-    (window._lastData?.opportunities || []).map(o => (o.question||'').slice(0,50))
-  );
+  const oppQuestions = new Set(opps.map(o => (o.question||'').slice(0,50)));
 
-  body.innerHTML = markets.map(m => {
-    const q = m.question || '—';
-
-    // YES fiyatı
-    let yesPct = 50;
-    try {
-      const op = typeof m.outcomePrices === 'string' ? JSON.parse(m.outcomePrices) : m.outcomePrices;
-      if (op && op[0]) yesPct = Math.round(parseFloat(op[0]) * 100);
-    } catch(e) {
-      if (m.bestBid) yesPct = Math.round(parseFloat(m.bestBid) * 100);
-    }
-
-    // Volume
-    const vol = parseFloat(m.volumeNum || m.volume || m.volume24hr || 0);
-    const volStr = vol >= 1e6 ? (vol/1e6).toFixed(1)+'M'
-                 : vol >= 1e3 ? Math.round(vol/1e3)+'K' : '—';
-
-    // Yön
-    const ql = q.toLowerCase();
-    const isBelow = ql.includes('below') || ql.includes('dip') || ql.includes('drop') || ql.includes('fall');
+  body.innerHTML = all.map(m => {
+    const q       = m.question || '—';
+    const yesPct  = Math.round(m.market_prob || 50);
+    const vol     = m.volume_24h || 0;
+    const volStr  = vol >= 1e6 ? (vol/1e6).toFixed(1)+'M'
+                  : vol >= 1e3 ? Math.round(vol/1e3)+'K' : '—';
+    const isBelow = m.direction === 'below';
     const dirCls  = isBelow ? 'below' : 'above';
     const dirTxt  = isBelow ? '↓' : '↑';
-
-    // Renk
-    const barColor = yesPct >= 70 ? 'var(--green)' : yesPct <= 30 ? 'var(--red)' : 'var(--accent)';
-    const yesCls   = yesPct >= 70 ? 'color:var(--green)' : yesPct <= 30 ? 'color:var(--red)' : 'color:var(--accent2)';
-
-    // Kapanışa kalan süre
-    const end = m.endDate || m.end_date_iso || '';
-    let timeStr = '—';
-    if (end) {
-      const diff = (new Date(end) - Date.now()) / 3600000;
-      timeStr = diff < 0 ? 'Expired'
-              : diff < 1 ? Math.round(diff*60)+'m'
-              : diff < 24 ? Math.round(diff)+'h'
-              : Math.round(diff/24)+'d';
-    }
-
-    // SIG badge — bot sinyal ürettiyse
-    const isSig = oppQuestions.has(q.slice(0,50));
-    const sigBadge = isSig ? '<span style="display:inline-flex;padding:1px 5px;border-radius:3px;background:rgba(124,106,247,0.2);color:var(--accent2);font-size:9px;font-family:var(--mono);margin-left:4px">SIG</span>' : '';
+    const barColor= yesPct >= 70 ? 'var(--green)' : yesPct <= 30 ? 'var(--red)' : 'var(--accent)';
+    const yesCls  = yesPct >= 70 ? 'color:var(--green)' : yesPct <= 30 ? 'color:var(--red)' : 'color:var(--accent2)';
+    const hl      = m.hours_left || 0;
+    const timeStr = hl <= 0 ? 'Expired'
+                  : hl < 1  ? Math.round(hl*60)+'m'
+                  : hl < 24 ? Math.round(hl)+'h'
+                  : Math.round(hl/24)+'d';
+    const edge    = m.live_edge_pct ?? m.edge_pct ?? null;
+    const edgeStr = edge !== null
+      ? `<span style="font-size:10px;font-family:var(--mono);color:${edge>0?'var(--green)':'var(--red)'}">${edge>0?'+':''}${edge.toFixed(1)}%</span>`
+      : '';
+    const isSig   = oppQuestions.has(q.slice(0,50));
+    const sigBadge= isSig ? '<span style="display:inline-flex;padding:1px 5px;border-radius:3px;background:rgba(124,106,247,0.2);color:var(--accent2);font-size:9px;font-family:var(--mono);margin-left:4px">SIG</span>' : '';
 
     return `<div class="lm-item">
       <div class="lm-q">${q.slice(0,58)}${q.length>58?'…':''}${sigBadge}</div>
@@ -1189,6 +1152,7 @@ function renderLiveMarkets(markets) {
         <div class="lm-bar-wrap">
           <div class="lm-bar-yes" style="width:${yesPct}%;background:${barColor}"></div>
         </div>
+        ${edgeStr}
         <span class="lm-vol">${volStr}</span>
         <span class="lm-dir ${dirCls}">${dirTxt}</span>
         <span style="font-size:10px;color:var(--dim);font-family:var(--mono)">${timeStr}</span>
@@ -1200,9 +1164,7 @@ function renderLiveMarkets(markets) {
 window.addEventListener('resize', drawChart);
 drawChart();
 fetchData();
-fetchLiveMarkets();
 setInterval(fetchData, REFRESH_MS);
-setInterval(fetchLiveMarkets, 60000);
 </script>
 </body>
 </html>
