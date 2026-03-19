@@ -488,6 +488,7 @@ tr:hover td { background: rgba(255,255,255,0.02); }
       <div style="font-size:11px;color:var(--sub);font-family:var(--mono)">
         Open: <span id="pnl-open-count" style="color:var(--accent2)">0</span> &nbsp;·&nbsp;
         Closed: <span id="pnl-closed-count" style="color:var(--sub)">0</span>
+        &nbsp;·&nbsp; <span id="pnl-slots"></span>
       </div>
     </div>
 
@@ -653,12 +654,23 @@ function drawChart() {
 function tickChart(p) {
   if (!chartData.length) { initChart(p); return; }
   chartData.shift();
-  chartData.push(p+(Math.random()-.5)*p*.0001);
+  // Gerçek fiyat hareketine daha yakın noise
+  const vol = Math.abs(p * 0.0002); // ~0.02% hareket
+  chartData.push(p + (Math.random()-.5) * vol);
   drawChart();
 }
 
 
 // ── P&L TRACKER ──────────────────────────
+function timeAgo(dateStr) {
+  if (!dateStr) return '—';
+  const diff = Math.floor((Date.now() - new Date(dateStr.replace(' UTC','Z'))) / 1000);
+  if (diff < 60)   return diff + 's ago';
+  if (diff < 3600) return Math.floor(diff/60) + 'm ago';
+  if (diff < 86400) return Math.floor(diff/3600) + 'h ago';
+  return Math.floor(diff/86400) + 'd ago';
+}
+
 function updatePnL(d) {
   const stats   = d.pnl_stats || {};
   const open    = d.open_positions || [];
@@ -687,6 +699,19 @@ function updatePnL(d) {
   $('pnl-avg-win',  stats.avg_win  ? '+'+stats.avg_win.toFixed(2)+'%'  : '—');
   $('pnl-avg-loss', stats.avg_loss ? stats.avg_loss.toFixed(2)+'%'  : '—');
 
+  // ── Slot göstergesi ──────────────────────────────────────────
+  const yesOpen = open.filter(p => p.action && p.action.includes('YES')).length;
+  const noOpen  = open.filter(p => p.action && p.action.includes('NO')).length;
+  const slotEl  = document.getElementById('pnl-slots');
+  if (slotEl) {
+    const mkSlot = (label, used, max) => {
+      const full = used >= max;
+      const color = full ? 'var(--red)' : used > 0 ? 'var(--yellow)' : 'var(--green)';
+      return `<span style="font-size:11px;font-family:var(--mono);color:${color}">${label}: ${used}/${max}</span>`;
+    };
+    slotEl.innerHTML = mkSlot('YES', yesOpen, 2) + '&nbsp;&nbsp;' + mkSlot('NO', noOpen, 2);
+  }
+
   // Open positions
   const openEl = document.getElementById('pnl-open-body');
   if (openEl) {
@@ -708,15 +733,22 @@ function updatePnL(d) {
           const entryEdge = p.entry_edge || 0;
           const currEdge  = p.current_edge || 0;
           const evExit    = p.ev_exit_threshold || (entryEdge * 0.3);
-          const edgeEroding = currEdge < entryEdge * 0.6;
-          const edgeCls = edgeEroding ? 'color:var(--yellow)' : 'color:var(--green)';
+          // Edge erosion progress
+          const eroded    = entryEdge > 0 ? Math.max(0, Math.min(100, (1 - currEdge/entryEdge) * 100)) : 0;
+          const edgeCls   = currEdge < evExit * 1.5 ? 'color:var(--red)' : currEdge < entryEdge * 0.6 ? 'color:var(--yellow)' : 'color:var(--green)';
+          const barColor  = eroded > 80 ? 'var(--red)' : eroded > 50 ? 'var(--yellow)' : 'var(--green)';
           return `<tr style="border-bottom:1px solid var(--border)">
             <td style="padding:10px 0;font-size:11px;color:var(--text);max-width:240px">${p.question}<br>
               <span style="font-size:10px;color:var(--sub);font-family:var(--mono)">${p.action} · ${(p.opened_at||'').slice(11,16)}</span>
             </td>
             <td style="padding:10px 0;text-align:right;font-family:var(--mono);font-size:11px">${(p.entry||0).toFixed(4)}</td>
             <td style="padding:10px 0;text-align:right;font-family:var(--mono);font-size:11px;color:var(--sub)">${entryEdge.toFixed(1)}%</td>
-            <td style="padding:10px 0;text-align:right;font-family:var(--mono);font-size:11px;${edgeCls}">${currEdge.toFixed(1)}%</td>
+            <td style="padding:10px 0;text-align:right;font-family:var(--mono);font-size:11px">
+              <span style="${edgeCls}">${currEdge.toFixed(1)}%</span><br>
+              <div style="width:60px;height:3px;background:var(--bg3);border-radius:99px;overflow:hidden;margin-left:auto;margin-top:3px">
+                <div style="width:${eroded}%;height:100%;background:${barColor};border-radius:99px;transition:width .5s"></div>
+              </div>
+            </td>
             <td style="padding:10px 0;text-align:right;font-family:var(--mono);font-size:11px;color:var(--dim)">&lt;${evExit.toFixed(1)}%</td>
             <td style="padding:10px 0;text-align:right;font-family:var(--mono);font-size:12px;font-weight:500;${pnlCls}">${pnl>0?'+':''}${pnl.toFixed(2)}%</td>
           </tr>`;
@@ -734,10 +766,16 @@ function updatePnL(d) {
       closedEl.innerHTML = [...closed].reverse().map(p => {
         const win = p.win;
         const pnl = p.pnl_pct || 0;
+        const reason = p.reason || '';
+        // Kapanış nedeni rengi
+        const reasonColor = reason.includes('EDGE ERODED') ? 'var(--green)'
+                          : reason.includes('DIRECTION')   ? 'var(--red)'
+                          : reason.includes('EXPIRED')     ? 'var(--dim)'
+                          : 'var(--sub)';
         return `<div style="display:flex;align-items:center;gap:12px;padding:8px 0;border-bottom:1px solid var(--border)">
           <div style="width:7px;height:7px;border-radius:50%;background:${win?'var(--green)':'var(--red)'};flex-shrink:0"></div>
           <div style="flex:1;font-size:11px;color:var(--text)">${p.question.slice(0,45)}</div>
-          <div style="font-size:10px;color:var(--sub);font-family:var(--mono)">${p.reason}</div>
+          <div style="font-size:10px;font-family:var(--mono);color:${reasonColor}">${reason}</div>
           <div style="font-size:12px;font-weight:500;font-family:var(--mono);${win?'color:var(--green)':'color:var(--red)'}">${pnl>0?'+':''}${pnl.toFixed(2)}%</div>
         </div>`;
       }).join('');
@@ -780,7 +818,9 @@ function update(d) {
 
     // Header
     const now = new Date();
-    $('hdr-time', upd ? upd.slice(11,19)+' UTC' : now.toTimeString().slice(0,8)+' UTC');
+    const timeStr = upd ? upd.slice(11,19)+' UTC' : now.toTimeString().slice(0,8)+' UTC';
+    const agoStr  = upd ? ' · ' + timeAgo(upd) : '';
+    $('hdr-time', timeStr + agoStr);
 
     // BTC
     if (price > 0) {
