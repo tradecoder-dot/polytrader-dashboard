@@ -105,6 +105,71 @@ header {
 .main-left { min-width: 0; }
 .main-right { position: sticky; top: 80px; }
 
+/* ── RESPONSIVE — Tablet (≤1024px) ── */
+@media (max-width: 1024px) {
+  .main-layout {
+    grid-template-columns: 1fr;
+  }
+  .main-right {
+    position: static;
+  }
+  .mid {
+    grid-template-columns: 1fr;
+  }
+  .hero {
+    grid-template-columns: 1fr 1fr;
+  }
+  .card-btc {
+    grid-column: 1 / 3;
+  }
+  .winrate-row {
+    grid-template-columns: 1fr 1fr;
+  }
+  .results-card {
+    grid-column: 1 / 3;
+  }
+}
+
+/* ── RESPONSIVE — Mobil (≤640px) ── */
+@media (max-width: 640px) {
+  .page { padding: 16px 14px 40px; }
+  .header { padding: 0 14px; }
+
+  .main-layout {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+  .main-right {
+    position: static;
+  }
+  .hero {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+  .card-btc {
+    grid-column: 1 / 2;
+  }
+  .btc-price { font-size: 36px; }
+  .mid {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+  .winrate-row {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+  .results-card {
+    grid-column: 1 / 2;
+  }
+  .status-bar { display: none; }
+  .thresh-num { font-size: 36px; }
+  .wr-rate    { font-size: 32px; }
+  table { font-size: 11px; }
+  th, td { padding: 8px 10px; }
+  .tq { max-width: 160px; }
+  .panel-meta { flex-wrap: wrap; gap: 8px; }
+}
+
 /* ── LIVE MARKETS PANEL ── */
 .live-markets-card {
   background: var(--bg2);
