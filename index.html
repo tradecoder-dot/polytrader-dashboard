@@ -931,16 +931,27 @@ function updatePnL(d) {
         const win = p.win;
         const pnl = p.pnl_pct || 0;
         const reason = p.reason || '';
+        const entry  = p.entry ? p.entry.toFixed(4) : '—';
+        const close  = p.close_price ? p.close_price.toFixed(4) : '—';
+        const erosion = p.edge_erosion_ratio !== undefined && p.edge_erosion_ratio !== null
+                      ? `<span style="font-size:10px;color:var(--dim);font-family:var(--mono)">er=${p.edge_erosion_ratio.toFixed(2)}</span>` : '';
         // Kapanış nedeni rengi
         const reasonColor = reason.includes('EDGE ERODED') ? 'var(--green)'
                           : reason.includes('DIRECTION')   ? 'var(--red)'
                           : reason.includes('EXPIRED')     ? 'var(--dim)'
                           : 'var(--sub)';
-        return `<div style="display:flex;align-items:center;gap:12px;padding:8px 0;border-bottom:1px solid var(--border)">
-          <div style="width:7px;height:7px;border-radius:50%;background:${win?'var(--green)':'var(--red)'};flex-shrink:0"></div>
-          <div style="flex:1;font-size:11px;color:var(--text)">${p.question.slice(0,45)}</div>
-          <div style="font-size:10px;font-family:var(--mono);color:${reasonColor}">${reason}</div>
-          <div style="font-size:12px;font-weight:500;font-family:var(--mono);${win?'color:var(--green)':'color:var(--red)'}">${pnl>0?'+':''}${pnl.toFixed(2)}%</div>
+        return `<div style="display:flex;flex-direction:column;padding:8px 0;border-bottom:1px solid var(--border);gap:4px">
+          <div style="display:flex;align-items:center;gap:10px">
+            <div style="width:7px;height:7px;border-radius:50%;background:${win?'var(--green)':'var(--red)'};flex-shrink:0"></div>
+            <div style="flex:1;font-size:11px;color:var(--text)">${p.question.slice(0,45)}</div>
+            <div style="font-size:10px;font-family:var(--mono);color:${reasonColor}">${reason}</div>
+            <div style="font-size:12px;font-weight:500;font-family:var(--mono);${win?'color:var(--green)':'color:var(--red)'}">${pnl>0?'+':''}${pnl.toFixed(2)}%</div>
+          </div>
+          <div style="display:flex;gap:14px;padding-left:17px">
+            <span style="font-size:10px;color:var(--dim);font-family:var(--mono)">entry <span style="color:var(--sub)">${entry}</span></span>
+            <span style="font-size:10px;color:var(--dim);font-family:var(--mono)">close <span style="color:var(--sub)">${close}</span></span>
+            ${erosion}
+          </div>
         </div>`;
       }).join('');
     }
