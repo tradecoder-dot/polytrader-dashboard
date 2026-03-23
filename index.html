@@ -336,6 +336,29 @@ canvas        { width: 100%; height: 100%; display: block; }
 .calib-note { margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--border); font-size: 11px; color: var(--dim); line-height: 1.8; font-family: var(--mono); }
 .calib-note b { color: var(--sub); font-weight: 400; }
 
+/* ── LIVE EXECUTION LOG ── */
+.exec-log-card { margin-bottom: 20px; overflow: hidden; }
+.exec-log-body {
+  font-family: var(--mono);
+  font-size: 11px;
+  line-height: 1.8;
+  padding: 14px 18px;
+  max-height: 220px;
+  overflow-y: auto;
+  background: var(--bg1);
+}
+.exec-log-body::-webkit-scrollbar { width: 4px; }
+.exec-log-body::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+.log-line { display: flex; gap: 10px; padding: 2px 0; border-bottom: 1px solid rgba(255,255,255,0.03); }
+.log-tag  { font-weight: 700; min-width: 64px; font-size: 10px; letter-spacing: 0.5px; }
+.log-scan   { color: var(--sub); }
+.log-signal { color: var(--accent2); }
+.log-ev     { color: var(--yellow); }
+.log-pos    { color: var(--green); }
+.log-update { color: var(--dim); }
+.log-close  { color: var(--red); }
+.log-msg  { color: var(--text); flex: 1; }
+
 /* ── WIN RATE ── */
 .winrate-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; margin-bottom: 20px; }
 
@@ -655,6 +678,22 @@ tr:hover td { background: rgba(255,255,255,0.02); }
   </div>
 
 
+
+  <!-- LIVE EXECUTION LOG -->
+  <div class="card exec-log-card fade fade-3">
+    <div class="panel-head">
+      <div class="panel-title">
+        <div class="panel-dot" style="background:var(--accent2);animation:glow 2s ease-in-out infinite"></div>
+        Live Execution Log
+      </div>
+      <div class="panel-meta">
+        <span id="log-count">—</span> &nbsp;·&nbsp; 30s refresh
+      </div>
+    </div>
+    <div class="exec-log-body" id="exec-log-body">
+      <div style="color:var(--dim)">Waiting for data...</div>
+    </div>
+  </div>
 
   <!-- RADAR -->
   <div class="card radar-card fade fade-4">
@@ -1021,6 +1060,9 @@ function update(d) {
 
     // Live Markets
     try { renderLiveMarkets(d); } catch(e) { console.warn('LiveMarkets error:', e); }
+
+    // Execution Log
+    try { renderExecLog(d); } catch(e) { console.warn('ExecLog error:', e); }
     try {
       $('sbt',       upd?upd.slice(11,19)+' UTC':'—');
       $('sb-scans',  scans); $('sb-skips', skips);
@@ -1138,6 +1180,81 @@ function renderOpps(opps) {
 function $(id,val){const e=document.getElementById(id);if(e)e.textContent=val;}
 
 // ── LIVE BTC MARKETS — JSONBin'den gelir ─────────────────────
+function renderExecLog(d) {
+  const body = document.getElementById('exec-log-body');
+  if (!body) return;
+
+  const lines = [];
+  const btc   = d.btc_price || 0;
+  const thresh = d.active_threshold || 0;
+  const markets = (d.all_markets || []).length || (d.radar||[]).length + (d.opportunities||[]).length;
+  const upd   = d.last_update || '';
+  const time  = upd ? upd.slice(11,19) : '—';
+
+  // [SCAN] — her güncellemede
+  lines.push({
+    tag: '[SCAN]', cls: 'log-scan',
+    msg: `BTC $${Number(btc).toLocaleString()} · threshold ${thresh} · ${markets} markets · ${time} UTC`
+  });
+
+  // [SIGNAL] — opportunities listesinden
+  (d.opportunities || []).forEach(o => {
+    const ac = o.action?.includes('YES') ? 'BUY YES' : o.action?.includes('NO') ? 'BUY NO' : 'WAIT';
+    const sign = o.edge_pct > 0 ? '+' : '';
+    lines.push({
+      tag: '[SIGNAL]', cls: 'log-signal',
+      msg: `${(o.question||'').slice(0,45)} · edge ${sign}${(o.edge_pct||0).toFixed(1)}% · score ${o.score}/100`
+    });
+    // [EV] — pozisyon detayı
+    if (ac !== 'WAIT') {
+      lines.push({
+        tag: '[EV]', cls: 'log-ev',
+        msg: `MKT=${(o.market_prob||0).toFixed(1)}% MOD=${(o.expected_prob||0).toFixed(1)}% · ${ac} · EV exit<${((Math.abs(o.edge_pct||0))*0.4).toFixed(1)}%`
+      });
+    }
+  });
+
+  // [POS] — açık pozisyonlar
+  (d.open_positions || []).forEach(p => {
+    const ac = p.action?.includes('YES') ? 'BUY YES' : 'BUY NO';
+    lines.push({
+      tag: '[POS]', cls: 'log-pos',
+      msg: `${p.id} · ${(p.question||'').slice(0,40)} · ${ac} · Entry=${(p.entry||0).toFixed(4)}`
+    });
+    // [UPDATE] — curr edge
+    const ce = p.current_edge ?? p.entry_edge;
+    const pnl = p.unrealized_pnl ?? 0;
+    const pnlSign = pnl >= 0 ? '+' : '';
+    lines.push({
+      tag: '[UPDATE]', cls: 'log-update',
+      msg: `${p.id} · curr_edge=${(ce||0).toFixed(1)}% · EV exit<${((p.ev_exit_threshold||0)*100).toFixed(1)}% · P&L=${pnlSign}${(pnl||0).toFixed(2)}%`
+    });
+  });
+
+  // [CLOSE] — son kapanan pozisyonlar (ilk 2)
+  (d.closed_positions || []).slice(-2).forEach(p => {
+    const pnl = p.pnl_pct || 0;
+    const pnlSign = pnl >= 0 ? '+' : '';
+    const win = pnl >= 0 ? '✅' : '❌';
+    lines.push({
+      tag: '[CLOSE]', cls: 'log-close',
+      msg: `${win} ${p.id} · ${(p.reason||'').replace(/_/g,' ')} · P&L=${pnlSign}${pnl.toFixed(2)}%`
+    });
+  });
+
+  $('log-count', lines.length + ' entries');
+
+  body.innerHTML = lines.map(l =>
+    `<div class="log-line">
+      <span class="log-tag ${l.cls}">${l.tag}</span>
+      <span class="log-msg">${l.msg}</span>
+    </div>`
+  ).join('');
+
+  // Auto-scroll to bottom
+  body.scrollTop = body.scrollHeight;
+}
+
 function renderLiveMarkets(d) {
   const body = document.getElementById('lm-body');
   if (!body) return;
