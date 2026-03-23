@@ -1242,7 +1242,8 @@ function renderExecLog(d) {
     });
   });
 
-  $('log-count', lines.length + ' entries');
+  const posCount = lines.filter(l => l.tag === '[POS]').length;
+  $('log-count', posCount + ' positions');
 
   body.innerHTML = lines.map(l =>
     `<div class="log-line">
