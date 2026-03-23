@@ -618,8 +618,9 @@ tr:hover td { background: rgba(255,255,255,0.02); }
       </div>
       <div style="font-size:11px;color:var(--sub);font-family:var(--mono)">
         Open: <span id="pnl-open-count" style="color:var(--accent2)">0</span> &nbsp;·&nbsp;
-        Closed: <span id="pnl-closed-count" style="color:var(--sub)">0</span>
-        &nbsp;·&nbsp; <span id="pnl-slots"></span>
+        Closed: <span id="pnl-closed-count" style="color:var(--sub)">0</span> &nbsp;·&nbsp;
+        <span id="pnl-slots"></span> &nbsp;·&nbsp;
+        All-time: <span id="pnl-total-trades" style="color:var(--sub)">0</span> trades
       </div>
     </div>
 
@@ -653,34 +654,7 @@ tr:hover td { background: rgba(255,255,255,0.02); }
     </div>
   </div>
 
-  <!-- WIN RATE ROW -->
-  <div class="winrate-row fade fade-3">
 
-    <!-- Win Rate -->
-    <div class="card wr-card">
-      <div class="stat-lbl">WIN RATE</div>
-      <div class="wr-rate none" id="wr-rate">—</div>
-      <div class="wr-track">
-        <div class="wr-win"  id="wr-bar-win"  style="width:0%"></div>
-        <div class="wr-loss" id="wr-bar-loss" style="width:0%"></div>
-      </div>
-      <div class="wr-labels">
-        <span id="wr-lbl-win">0 correct</span>
-        <span id="wr-lbl-loss">0 wrong</span>
-      </div>
-      <div style="margin-top:14px;font-size:11px;color:var(--dim);font-family:var(--mono)">
-        Total: <span style="color:var(--sub)" id="wr-total">0</span> &nbsp;·&nbsp;
-        Pending: <span style="color:var(--sub)" id="wr-pending">0</span>
-      </div>
-    </div>
-
-    <!-- Recent Results -->
-    <div class="card results-card">
-      <div class="stat-lbl">RECENT RESULTS</div>
-      <div id="wr-recent"><div class="result-empty">No completed predictions yet</div></div>
-    </div>
-
-  </div>
 
   <!-- RADAR -->
   <div class="card radar-card fade fade-4">
@@ -828,6 +802,7 @@ function updatePnL(d) {
 
   $('pnl-open-count',   open.length);
   $('pnl-closed-count', stats.total || 0);
+  $('pnl-total-trades', stats.total || 0);
 
   // Stats
   const totalPnl = stats.total_pnl || 0;
