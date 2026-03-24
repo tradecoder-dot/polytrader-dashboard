@@ -886,6 +886,7 @@ function updatePnL(d) {
         <thead><tr>
           <th style="padding:7px 0;text-align:left;font-size:10px;color:var(--dim);border-bottom:1px solid var(--border);letter-spacing:1.5px;font-family:var(--mono)">QUESTION</th>
           <th style="padding:7px 0;text-align:right;font-size:10px;color:var(--dim);border-bottom:1px solid var(--border);letter-spacing:1.5px;font-family:var(--mono)">ENTRY</th>
+          <th style="padding:7px 0;text-align:right;font-size:10px;color:var(--dim);border-bottom:1px solid var(--border);letter-spacing:1.5px;font-family:var(--mono)">PRICE</th>
           <th style="padding:7px 0;text-align:right;font-size:10px;color:var(--dim);border-bottom:1px solid var(--border);letter-spacing:1.5px;font-family:var(--mono)">ENTRY EDGE</th>
           <th style="padding:7px 0;text-align:right;font-size:10px;color:var(--dim);border-bottom:1px solid var(--border);letter-spacing:1.5px;font-family:var(--mono)">CURR EDGE</th>
           <th style="padding:7px 0;text-align:right;font-size:10px;color:var(--dim);border-bottom:1px solid var(--border);letter-spacing:1.5px;font-family:var(--mono)">EV EXIT</th>
@@ -897,6 +898,10 @@ function updatePnL(d) {
           const entryEdge = p.entry_edge || 0;
           const currEdge  = p.current_edge || 0;
           const evExit    = p.ev_exit_threshold || (entryEdge * 0.3);
+          // Cent cinsinden fiyatlar (Polymarket gibi)
+          const entryCents   = Math.round((p.entry || 0) * 100);
+          const currentCents = Math.round((p.current_price || 0) * 100);
+          const priceCls     = currentCents > entryCents ? 'color:var(--green)' : currentCents < entryCents ? 'color:var(--red)' : 'color:var(--sub)';
           // Edge erosion progress
           const eroded    = entryEdge > 0 ? Math.max(0, Math.min(100, (1 - currEdge/entryEdge) * 100)) : 0;
           const edgeCls   = currEdge < evExit * 1.5 ? 'color:var(--red)' : currEdge < entryEdge * 0.6 ? 'color:var(--yellow)' : 'color:var(--green)';
@@ -905,7 +910,8 @@ function updatePnL(d) {
             <td style="padding:10px 0;font-size:11px;color:var(--text);max-width:240px">${p.question}<br>
               <span style="font-size:10px;color:var(--sub);font-family:var(--mono)">${p.action} · ${(p.opened_at||'').slice(11,16)}</span>
             </td>
-            <td style="padding:10px 0;text-align:right;font-family:var(--mono);font-size:11px">${(p.entry||0).toFixed(4)}</td>
+            <td style="padding:10px 0;text-align:right;font-family:var(--mono);font-size:11px">${entryCents}¢</td>
+            <td style="padding:10px 0;text-align:right;font-family:var(--mono);font-size:11px"><span style="${priceCls}">${currentCents}¢</span></td>
             <td style="padding:10px 0;text-align:right;font-family:var(--mono);font-size:11px;color:var(--sub)">${entryEdge.toFixed(1)}%</td>
             <td style="padding:10px 0;text-align:right;font-family:var(--mono);font-size:11px">
               <span style="${edgeCls}">${currEdge.toFixed(1)}%</span><br>
@@ -931,27 +937,16 @@ function updatePnL(d) {
         const win = p.win;
         const pnl = p.pnl_pct || 0;
         const reason = p.reason || '';
-        const entry  = p.entry ? p.entry.toFixed(4) : '—';
-        const close  = p.close_price ? p.close_price.toFixed(4) : '—';
-        const erosion = p.edge_erosion_ratio !== undefined && p.edge_erosion_ratio !== null
-                      ? `<span style="font-size:10px;color:var(--dim);font-family:var(--mono)">er=${p.edge_erosion_ratio.toFixed(2)}</span>` : '';
         // Kapanış nedeni rengi
         const reasonColor = reason.includes('EDGE ERODED') ? 'var(--green)'
                           : reason.includes('DIRECTION')   ? 'var(--red)'
                           : reason.includes('EXPIRED')     ? 'var(--dim)'
                           : 'var(--sub)';
-        return `<div style="display:flex;flex-direction:column;padding:8px 0;border-bottom:1px solid var(--border);gap:4px">
-          <div style="display:flex;align-items:center;gap:10px">
-            <div style="width:7px;height:7px;border-radius:50%;background:${win?'var(--green)':'var(--red)'};flex-shrink:0"></div>
-            <div style="flex:1;font-size:11px;color:var(--text)">${p.question.slice(0,45)}</div>
-            <div style="font-size:10px;font-family:var(--mono);color:${reasonColor}">${reason}</div>
-            <div style="font-size:12px;font-weight:500;font-family:var(--mono);${win?'color:var(--green)':'color:var(--red)'}">${pnl>0?'+':''}${pnl.toFixed(2)}%</div>
-          </div>
-          <div style="display:flex;gap:14px;padding-left:17px">
-            <span style="font-size:10px;color:var(--dim);font-family:var(--mono)">entry <span style="color:var(--sub)">${entry}</span></span>
-            <span style="font-size:10px;color:var(--dim);font-family:var(--mono)">close <span style="color:var(--sub)">${close}</span></span>
-            ${erosion}
-          </div>
+        return `<div style="display:flex;align-items:center;gap:12px;padding:8px 0;border-bottom:1px solid var(--border)">
+          <div style="width:7px;height:7px;border-radius:50%;background:${win?'var(--green)':'var(--red)'};flex-shrink:0"></div>
+          <div style="flex:1;font-size:11px;color:var(--text)">${p.question.slice(0,45)}</div>
+          <div style="font-size:10px;font-family:var(--mono);color:${reasonColor}">${reason}</div>
+          <div style="font-size:12px;font-weight:500;font-family:var(--mono);${win?'color:var(--green)':'color:var(--red)'}">${pnl>0?'+':''}${pnl.toFixed(2)}%</div>
         </div>`;
       }).join('');
     }
