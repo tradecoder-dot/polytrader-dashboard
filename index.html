@@ -757,11 +757,9 @@ tr:hover td { background: rgba(255,255,255,0.02); }
 </div><!-- /page -->
 
 <script>
-const BTC_BIN_ID      = '69b2ca72aa77b81da9dbbb81';
-const JSONBIN_KEY     = '$2a$10$.quh6XoPJ4MjL.ls.ejOxuw0ZtOxjqFHe7Ca8gHtiOm79anzFshT2';
-const POSITION_BIN_ID = '69c44183b7ec241ddca272da';  // ← yeni bin ID
-const REFRESH_MS      = 10000;
-const POS_REFRESH_MS  = 5000;
+const BTC_BIN_ID  = '69b2ca72aa77b81da9dbbb81';
+const JSONBIN_KEY = '$2a$10$.quh6XoPJ4MjL.ls.ejOxuw0ZtOxjqFHe7Ca8gHtiOm79anzFshT2';
+const REFRESH_MS  = 30000;
 
 // ── CHART ──
 const canvas = document.getElementById('chart');
@@ -1324,29 +1322,10 @@ function renderLiveMarkets(d) {
   }).join('');
 }
 
-// ── POSITION BIN FETCH — 5sn'de bir, sadece position tracker ──
-let _isPosFetching = false;
-
-async function fetchPositions() {
-  if (!POSITION_BIN_ID || POSITION_BIN_ID === 'BURAYA_POSITION_BIN_ID_GIR') return;
-  if (_isPosFetching) return;
-  _isPosFetching = true;
-  try {
-    const r = await fetch(`https://api.jsonbin.io/v3/b/${POSITION_BIN_ID}/latest`,
-      {headers:{'X-Master-Key':JSONBIN_KEY}});
-    if (!r.ok) throw new Error(r.status);
-    const d = (await r.json()).record;
-    if (d) updatePnL(d);
-  } catch(e) { console.warn('[POS-BIN] fetch error:', e.message); }
-  finally { _isPosFetching = false; }
-}
-
 window.addEventListener('resize', drawChart);
 drawChart();
 fetchData();
-fetchPositions();
 setInterval(fetchData, REFRESH_MS);
-setInterval(fetchPositions, POS_REFRESH_MS);
 </script>
 </body>
 </html>
