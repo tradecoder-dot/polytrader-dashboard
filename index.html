@@ -526,18 +526,15 @@ tr:hover td { background: rgba(255,255,255,0.02); }
 <!-- SETTINGS MODAL -->
 <div id="settings-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:200;align-items:center;justify-content:center;padding:24px">
   <div style="background:#131316;border:1px solid rgba(255,255,255,0.12);border-radius:12px;padding:28px;width:100%;max-width:440px">
-    <div style="font-size:14px;font-weight:500;color:#e8e8f0;margin-bottom:20px">⚙ JSONBin Config</div>
-    <div style="margin-bottom:14px">
-      <div style="font-size:11px;color:#7a7a8c;font-family:'Geist Mono',monospace;letter-spacing:1px;margin-bottom:6px">BIN ID</div>
-      <input id="cfg-bin-id" type="text" placeholder="69b2ca..." style="width:100%;background:#1a1a1f;border:1px solid rgba(255,255,255,0.1);border-radius:6px;color:#e8e8f0;font-family:'Geist Mono',monospace;font-size:12px;padding:8px 12px;outline:none">
-    </div>
+    <div style="font-size:14px;font-weight:500;color:#e8e8f0;margin-bottom:20px">⚙ WebSocket Config</div>
     <div style="margin-bottom:20px">
-      <div style="font-size:11px;color:#7a7a8c;font-family:'Geist Mono',monospace;letter-spacing:1px;margin-bottom:6px">API KEY</div>
-      <input id="cfg-api-key" type="password" placeholder="$2a$10$..." style="width:100%;background:#1a1a1f;border:1px solid rgba(255,255,255,0.1);border-radius:6px;color:#e8e8f0;font-family:'Geist Mono',monospace;font-size:12px;padding:8px 12px;outline:none">
+      <div style="font-size:11px;color:#7a7a8c;font-family:'Geist Mono',monospace;letter-spacing:1px;margin-bottom:6px">WS URL</div>
+      <input id="cfg-ws-url" type="text" placeholder="wss://your-app.railway.app" style="width:100%;background:#1a1a1f;border:1px solid rgba(255,255,255,0.1);border-radius:6px;color:#e8e8f0;font-family:'Geist Mono',monospace;font-size:12px;padding:8px 12px;outline:none">
+      <div style="font-size:10px;color:#4a4a5a;margin-top:4px;font-family:'Geist Mono',monospace">Railway dashboard'undan WebSocket URL'ini gir</div>
     </div>
     <div style="display:flex;gap:8px;justify-content:flex-end">
       <button onclick="closeSettings()" style="background:none;border:1px solid rgba(255,255,255,0.1);color:#7a7a8c;font-family:'Geist Mono',monospace;font-size:12px;padding:7px 16px;border-radius:6px;cursor:pointer">İptal</button>
-      <button onclick="saveSettings()" style="background:rgba(52,211,153,0.15);border:1px solid rgba(52,211,153,0.3);color:#34d399;font-family:'Geist Mono',monospace;font-size:12px;padding:7px 16px;border-radius:6px;cursor:pointer">Kaydet</button>
+      <button onclick="saveSettings()" style="background:rgba(52,211,153,0.15);border:1px solid rgba(52,211,153,0.3);color:#34d399;font-family:'Geist Mono',monospace;font-size:12px;padding:7px 16px;border-radius:6px;cursor:pointer">Kaydet & Bağlan</button>
     </div>
   </div>
 </div>
@@ -777,13 +774,12 @@ tr:hover td { background: rgba(255,255,255,0.02); }
 </div><!-- /page -->
 
 <script>
-let BTC_BIN_ID  = localStorage.getItem('btc_bin_id')  || '';
-let JSONBIN_KEY = localStorage.getItem('jsonbin_key') || '';
+let BTC_BIN_ID  = '';
+let JSONBIN_KEY = '';
 const REFRESH_MS  = 10000;
 
 function openSettings() {
-  document.getElementById('cfg-bin-id').value  = localStorage.getItem('btc_bin_id')  || '';
-  document.getElementById('cfg-api-key').value = localStorage.getItem('jsonbin_key') || '';
+  document.getElementById('cfg-ws-url').value = localStorage.getItem('ws_url') || '';
   const ov = document.getElementById('settings-overlay');
   ov.style.display = 'flex';
 }
@@ -791,15 +787,11 @@ function closeSettings() {
   document.getElementById('settings-overlay').style.display = 'none';
 }
 function saveSettings() {
-  const id  = document.getElementById('cfg-bin-id').value.trim();
-  const key = document.getElementById('cfg-api-key').value.trim();
-  if (id && key) {
-    localStorage.setItem('btc_bin_id',  id);
-    localStorage.setItem('jsonbin_key', key);
-    BTC_BIN_ID  = id;
-    JSONBIN_KEY = key;
+  const url = document.getElementById('cfg-ws-url').value.trim();
+  if (url) {
+    localStorage.setItem('ws_url', url);
     closeSettings();
-    fetchData();
+    startWS();
   }
 }
 document.getElementById('settings-overlay').addEventListener('click', function(e) {
@@ -1007,20 +999,11 @@ function updatePnL(d) {
   }
 }
 
-// ── FETCH ──
-let _isFetching = false;
-
+// ── FETCH — WS modunda kullanılmıyor, geriye dönük uyumluluk için korundu ──
 async function fetchData() {
-  if (!BTC_BIN_ID||!JSONBIN_KEY) { $('hdr-time','BIN ID / KEY MISSING'); return; }
-  if (_isFetching) return; // Rate limit: duplicate isteği engelle
-  _isFetching = true;
-  try {
-    const r = await fetch(`https://api.jsonbin.io/v3/b/${BTC_BIN_ID}/latest`,
-      {headers:{'X-Master-Key':JSONBIN_KEY}});
-    if (!r.ok) throw new Error(r.status);
-    update((await r.json()).record);
-  } catch(e) { $('hdr-time','Error: '+e.message); }
-  finally { _isFetching = false; }
+  // WS bağlantısı aktif olduğunda bu fonksiyon çağrılmaz
+  // Sadece Config panelinden manuel tetiklenirse çalışır
+  startWS();
 }
 
 let prevThresh = null;
@@ -1376,10 +1359,76 @@ function renderLiveMarkets(d) {
   }).join('');
 }
 
+// ── WEBSOCKET CLIENT ─────────────────────────────────────────
+class BotSocket {
+  constructor() {
+    this._delay    = 1000;
+    this._maxDelay = 30000;
+    this._ws       = null;
+    this._stopped  = false;
+    this.connect();
+  }
+
+  _wsUrl() {
+    const saved = localStorage.getItem('ws_url') || '';
+    return saved;
+  }
+
+  connect() {
+    const url = this._wsUrl();
+    if (!url) {
+      $('hdr-time', 'WS URL eksik — Config\'den gir');
+      return;
+    }
+    this._ws = new WebSocket(url);
+
+    this._ws.onopen = () => {
+      this._delay = 1000;
+      document.getElementById('live-dot') && (document.getElementById('live-dot').style.background = 'var(--green)');
+      $('hdr-time', 'WS bağlandı');
+      log.info && console.log('[WS] Bağlandı');
+    };
+
+    this._ws.onmessage = (e) => {
+      try {
+        const data = JSON.parse(e.data);
+        update(data);
+        const now = new Date();
+        $('hdr-time', now.toTimeString().slice(0,8) + ' UTC · live');
+      } catch(err) {
+        console.error('[WS] Parse hatası:', err);
+      }
+    };
+
+    this._ws.onclose = () => {
+      if (this._stopped) return;
+      document.getElementById('live-dot') && (document.getElementById('live-dot').style.background = 'var(--red)');
+      $('hdr-time', `WS koptu — ${Math.round(this._delay/1000)}sn sonra yeniden bağlanıyor`);
+      setTimeout(() => this.connect(), this._delay);
+      this._delay = Math.min(this._delay * 2, this._maxDelay);
+    };
+
+    this._ws.onerror = () => {
+      this._ws.close();
+    };
+  }
+
+  stop() {
+    this._stopped = true;
+    this._ws && this._ws.close();
+  }
+}
+
+let _botSocket = null;
+
+function startWS() {
+  if (_botSocket) _botSocket.stop();
+  _botSocket = new BotSocket();
+}
+
 window.addEventListener('resize', drawChart);
 drawChart();
-fetchData();
-setInterval(fetchData, REFRESH_MS);
+startWS();
 </script>
 </body>
 </html>
