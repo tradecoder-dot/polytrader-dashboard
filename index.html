@@ -519,8 +519,28 @@ tr:hover td { background: rgba(255,255,255,0.02); }
     <div class="time-chip" id="hdr-time">—</div>
     <div class="live-pill"><div class="live-dot"></div>LIVE</div>
     <button class="refresh-btn" onclick="fetchData()">↻ Refresh</button>
+    <button class="refresh-btn" onclick="openSettings()" style="margin-left:4px">⚙ Config</button>
   </div>
 </header>
+
+<!-- SETTINGS MODAL -->
+<div id="settings-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:200;align-items:center;justify-content:center;padding:24px">
+  <div style="background:#131316;border:1px solid rgba(255,255,255,0.12);border-radius:12px;padding:28px;width:100%;max-width:440px">
+    <div style="font-size:14px;font-weight:500;color:#e8e8f0;margin-bottom:20px">⚙ JSONBin Config</div>
+    <div style="margin-bottom:14px">
+      <div style="font-size:11px;color:#7a7a8c;font-family:'Geist Mono',monospace;letter-spacing:1px;margin-bottom:6px">BIN ID</div>
+      <input id="cfg-bin-id" type="text" placeholder="69b2ca..." style="width:100%;background:#1a1a1f;border:1px solid rgba(255,255,255,0.1);border-radius:6px;color:#e8e8f0;font-family:'Geist Mono',monospace;font-size:12px;padding:8px 12px;outline:none">
+    </div>
+    <div style="margin-bottom:20px">
+      <div style="font-size:11px;color:#7a7a8c;font-family:'Geist Mono',monospace;letter-spacing:1px;margin-bottom:6px">API KEY</div>
+      <input id="cfg-api-key" type="password" placeholder="$2a$10$..." style="width:100%;background:#1a1a1f;border:1px solid rgba(255,255,255,0.1);border-radius:6px;color:#e8e8f0;font-family:'Geist Mono',monospace;font-size:12px;padding:8px 12px;outline:none">
+    </div>
+    <div style="display:flex;gap:8px;justify-content:flex-end">
+      <button onclick="closeSettings()" style="background:none;border:1px solid rgba(255,255,255,0.1);color:#7a7a8c;font-family:'Geist Mono',monospace;font-size:12px;padding:7px 16px;border-radius:6px;cursor:pointer">İptal</button>
+      <button onclick="saveSettings()" style="background:rgba(52,211,153,0.15);border:1px solid rgba(52,211,153,0.3);color:#34d399;font-family:'Geist Mono',monospace;font-size:12px;padding:7px 16px;border-radius:6px;cursor:pointer">Kaydet</button>
+    </div>
+  </div>
+</div>
 
 <div class="page">
 <div class="main-layout">
@@ -687,7 +707,7 @@ tr:hover td { background: rgba(255,255,255,0.02); }
         Live Execution Log
       </div>
       <div class="panel-meta">
-        <span id="log-count">—</span> &nbsp;·&nbsp; 30s refresh
+        <span id="log-count">—</span> &nbsp;·&nbsp; 10s refresh
       </div>
     </div>
     <div class="exec-log-body" id="exec-log-body">
@@ -732,7 +752,7 @@ tr:hover td { background: rgba(255,255,255,0.02); }
     <div class="sc">Skipped: <b id="sb-skips">—</b></div>
     <div class="sc">Signals: <b id="sb-opps">—</b></div>
     <div class="sc">Threshold: <b id="sb-thresh">—</b></div>
-    <div class="sc sc-r">30s refresh</div>
+    <div class="sc sc-r">10s refresh</div>
   </div>
 
 </div><!-- /main-left -->
@@ -757,9 +777,35 @@ tr:hover td { background: rgba(255,255,255,0.02); }
 </div><!-- /page -->
 
 <script>
-const BTC_BIN_ID  = '69b2ca72aa77b81da9dbbb81';
-const JSONBIN_KEY = '$2a$10$.quh6XoPJ4MjL.ls.ejOxuw0ZtOxjqFHe7Ca8gHtiOm79anzFshT2';
-const REFRESH_MS  = 15000;
+let BTC_BIN_ID  = localStorage.getItem('btc_bin_id')  || '';
+let JSONBIN_KEY = localStorage.getItem('jsonbin_key') || '';
+const REFRESH_MS  = 10000;
+
+function openSettings() {
+  document.getElementById('cfg-bin-id').value  = localStorage.getItem('btc_bin_id')  || '';
+  document.getElementById('cfg-api-key').value = localStorage.getItem('jsonbin_key') || '';
+  const ov = document.getElementById('settings-overlay');
+  ov.style.display = 'flex';
+}
+function closeSettings() {
+  document.getElementById('settings-overlay').style.display = 'none';
+}
+function saveSettings() {
+  const id  = document.getElementById('cfg-bin-id').value.trim();
+  const key = document.getElementById('cfg-api-key').value.trim();
+  if (id && key) {
+    localStorage.setItem('btc_bin_id',  id);
+    localStorage.setItem('jsonbin_key', key);
+    BTC_BIN_ID  = id;
+    JSONBIN_KEY = key;
+    closeSettings();
+    fetchData();
+  }
+}
+document.getElementById('settings-overlay').addEventListener('click', function(e) {
+  if (e.target === this) closeSettings();
+});
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeSettings(); });
 
 // ── CHART ──
 const canvas = document.getElementById('chart');
@@ -864,16 +910,24 @@ function updatePnL(d) {
   $('pnl-avg-loss', stats.avg_loss ? stats.avg_loss.toFixed(2)+'%'  : '—');
 
   // ── Slot göstergesi ──────────────────────────────────────────
-  const yesOpen = open.filter(p => p.action && p.action.includes('YES')).length;
-  const noOpen  = open.filter(p => p.action && p.action.includes('NO')).length;
-  const slotEl  = document.getElementById('pnl-slots');
+  const LONG_TERM_HOURS = 168;
+  const yesShort = open.filter(p => p.action?.includes('YES') && !p.is_long_term).length;
+  const noShort  = open.filter(p => p.action?.includes('NO')  && !p.is_long_term).length;
+  const yesLong  = open.filter(p => p.action?.includes('YES') && p.is_long_term).length;
+  const noLong   = open.filter(p => p.action?.includes('NO')  && p.is_long_term).length;
+  const slotEl   = document.getElementById('pnl-slots');
   if (slotEl) {
     const mkSlot = (label, used, max) => {
-      const full = used >= max;
+      const full  = used >= max;
       const color = full ? 'var(--red)' : used > 0 ? 'var(--yellow)' : 'var(--green)';
       return `<span style="font-size:11px;font-family:var(--mono);color:${color}">${label}: ${used}/${max}</span>`;
     };
-    slotEl.innerHTML = mkSlot('YES', yesOpen, 2) + '&nbsp;&nbsp;' + mkSlot('NO', noOpen, 2);
+    slotEl.innerHTML =
+      mkSlot('YES', yesShort, 2) + '&nbsp;' +
+      mkSlot('NO', noShort, 2)   + '&nbsp;&nbsp;·&nbsp;&nbsp;' +
+      `<span style="font-size:10px;font-family:var(--mono);color:var(--dim)">uzun:</span>&nbsp;` +
+      mkSlot('YES', yesLong, 1)  + '&nbsp;' +
+      mkSlot('NO', noLong, 1);
   }
 
   // Open positions
