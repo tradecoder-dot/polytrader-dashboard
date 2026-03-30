@@ -1386,7 +1386,12 @@ class BotSocket {
       this._delay = 1000;
       document.getElementById('live-dot') && (document.getElementById('live-dot').style.background = 'var(--green)');
       $('hdr-time', 'WS bağlandı');
-      log.info && console.log('[WS] Bağlandı');
+      // Railway proxy için keepalive — 25sn'de bir ping
+      this._pingTimer = setInterval(() => {
+        if (this._ws.readyState === WebSocket.OPEN) {
+          this._ws.send(JSON.stringify({type:'ping'}));
+        }
+      }, 25000);
     };
 
     this._ws.onmessage = (e) => {
@@ -1402,6 +1407,7 @@ class BotSocket {
 
     this._ws.onclose = () => {
       if (this._stopped) return;
+      clearInterval(this._pingTimer);
       document.getElementById('live-dot') && (document.getElementById('live-dot').style.background = 'var(--red)');
       $('hdr-time', `WS koptu — ${Math.round(this._delay/1000)}sn sonra yeniden bağlanıyor`);
       setTimeout(() => this.connect(), this._delay);
